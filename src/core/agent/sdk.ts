@@ -3,7 +3,7 @@
  * Core SDK for agent registration, authentication, and communication
  */
 
-import { AgentConfig, AgentMessage, AgentTask, AgentStatus, ApiResponse } from './agent-types';
+import { AgentConfig, AgentMessage, AgentTask, AgentStatus, ApiResponse } from './types';
 
 export class SymbiAgentSDK {
   private baseUrl: string;
@@ -30,14 +30,14 @@ export class SymbiAgentSDK {
         body: JSON.stringify(config),
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (!response.ok) {
         return {
-          success: false,
-          error: data.error || 'Registration failed',
-          data: null,
-        };
+        success: false,
+        error: data.error || 'Registration failed',
+        data: undefined,
+      };
       }
 
       this.agentId = data.agentId;
@@ -74,7 +74,7 @@ export class SymbiAgentSDK {
         body: JSON.stringify({ agentId, sessionToken }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (!response.ok) {
         return {
@@ -125,7 +125,7 @@ export class SymbiAgentSDK {
         body: JSON.stringify(message),
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (!response.ok) {
         return {
@@ -171,7 +171,7 @@ export class SymbiAgentSDK {
         },
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (!response.ok) {
         return {
@@ -219,7 +219,7 @@ export class SymbiAgentSDK {
         body: JSON.stringify(task),
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (!response.ok) {
         return {
@@ -265,7 +265,7 @@ export class SymbiAgentSDK {
         },
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (!response.ok) {
         return {
@@ -313,7 +313,7 @@ export class SymbiAgentSDK {
         body: JSON.stringify({ status }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (!response.ok) {
         return {

@@ -13,7 +13,7 @@ import {
   AuthContext,
   AuthorizationError,
   AuditLog
-} from './auth-types';
+} from './types';
 
 export class Authorizer {
   private roleDefinitions: Map<Role, RoleDefinition> = new Map();

@@ -1,47 +1,39 @@
-/**
- * Authentication Types - SYMBI Symphony
- * 
- * Type definitions for authentication and authorization in the SYMBI AI Agent ecosystem.
- */
+// Authentication and Authorization Types for SYMBI Symphony
 
-// Core authentication types
-export interface AgentCredentials {
-  agentId: string;
-  apiKey?: string;
-  token?: string;
-  username?: string;
-  password?: string;
-  publicKey?: string;
-  signature?: string;
-  timestamp?: number;
-  nonce?: string;
+export interface AuthConfig {
+  jwtSecret: string;
+  jwtExpiresIn: string;
+  refreshTokenExpiresIn: string;
+  mfa: MFAConfig;
+  rateLimit: RateLimitConfig;
+  sessionTimeout: number;
+  maxConcurrentSessions: number;
+  passwordPolicy: {
+    minLength: number;
+    requireUppercase: boolean;
+    requireLowercase: boolean;
+    requireNumbers: boolean;
+    requireSpecialChars: boolean;
+  };
 }
 
-export interface AuthToken {
-  token: string;
-  type: 'bearer' | 'api_key' | 'jwt';
-  expiresAt: Date;
-  scope: string[];
-  agentId: string;
-  sessionId: string;
-  refreshToken?: string;
-}
-
-export interface AuthSession {
-  sessionId: string;
-  agentId: string;
-  createdAt: Date;
-  expiresAt: Date;
-  lastActivity: Date;
-  ipAddress: string;
-  userAgent: string;
-  isActive: boolean;
-  permissions: Permission[];
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  passwordHash: string;
   roles: Role[];
+  isActive: boolean;
+  lastLogin?: Date;
+  createdAt: Date;
+  updatedAt: Date;
   metadata: Record<string, any>;
 }
 
-// Permission and role types
+export type Role = 
+  | 'super_admin' | 'admin' | 'agent_manager' | 'developer' 
+  | 'viewer' | 'agent' | 'service_account';
+
 export type Permission = 
   | 'read:agents' | 'write:agents' | 'delete:agents'
   | 'read:tasks' | 'write:tasks' | 'execute:tasks'
@@ -50,73 +42,50 @@ export type Permission =
   | 'read:metrics' | 'write:metrics'
   | 'admin:system' | 'admin:users' | 'admin:agents';
 
-export type Role = 
-  | 'super_admin' | 'admin' | 'agent_manager' | 'developer' 
-  | 'viewer' | 'agent' | 'service_account';
-
-export interface RoleDefinition {
-  name: Role;
-  description: string;
-  permissions: Permission[];
-  inherits?: Role[];
-  metadata?: Record<string, any>;
-}
-
-export interface AgentPermissions {
+export interface SessionData {
+  sessionId: string;
   agentId: string;
   roles: Role[];
   permissions: Permission[];
-  resourceAccess: {
-    repositories: string[];
-    tasks: string[];
-    agents: string[];
-  };
-  restrictions: {
-    ipWhitelist?: string[];
-    timeRestrictions?: {
-      allowedHours: number[];
-      timezone: string;
-    };
-    rateLimit?: {
-      requestsPerMinute: number;
-      requestsPerHour: number;
-    };
-  };
+  createdAt: Date;
+  expiresAt: Date;
+  lastActivity: Date;
+  ipAddress: string;
+  userAgent: string;
   metadata: Record<string, any>;
 }
 
-// Authentication configuration
-export interface AuthConfig {
-  method: 'api_key' | 'jwt' | 'oauth2' | 'mutual_tls';
-  apiKey?: {
-    headerName: string;
-    prefix?: string;
-  };
-  jwt?: {
-    secret: string;
-    algorithm: 'HS256' | 'HS384' | 'HS512' | 'RS256' | 'RS384' | 'RS512';
-    expiresIn: number;
-    issuer: string;
-    audience: string;
-  };
-  oauth2?: {
-    clientId: string;
-    clientSecret: string;
-    authorizationUrl: string;
-    tokenUrl: string;
-    scope: string[];
-  };
-  mutualTls?: {
-    caCert: string;
-    clientCert: string;
-    clientKey: string;
+export interface TokenPayload {
+  sub: string; // subject (agent ID)
+  iat: number; // issued at
+  exp: number; // expiration
+  aud: string; // audience
+  iss: string; // issuer
+  jti: string; // JWT ID
+  type: 'access' | 'refresh';
+  roles: string[];
+  permissions: string[];
+  sessionId: string;
+}
+
+export interface RefreshToken {
+  id: string;
+  agentId: string;
+  token: string;
+  expiresAt: Date;
+  createdAt: Date;
+  lastUsed?: Date;
+  isRevoked: boolean;
+  deviceInfo: {
+    userAgent: string;
+    ipAddress: string;
+    fingerprint: string;
   };
 }
 
-// Security and audit types
 export interface SecurityEvent {
   id: string;
-  type: 'login' | 'logout' | 'failed_login' | 'permission_denied' | 'token_expired' | 'suspicious_activity';
+  type: 'login_success' | 'login_failure' | 'logout' | 'token_refresh' | 'password_change' | 'role_change' | 'permission_change' | 'suspicious_activity';
   agentId: string;
   timestamp: Date;
   ipAddress: string;
@@ -204,4 +173,59 @@ export class RateLimitError extends Error {
     super(message);
     this.name = 'RateLimitError';
   }
+}
+
+// Additional types for authorization
+export interface RoleDefinition {
+  name: Role;
+  description: string;
+  permissions: Permission[];
+}
+
+export interface AgentPermissions {
+  agentId: string;
+  roles: Role[];
+  permissions: Permission[];
+  resourceAccess: {
+    repositories: string[];
+    tasks: string[];
+    agents: string[];
+  };
+  restrictions: Record<string, any>;
+  metadata: Record<string, any>;
+}
+
+// Agent credentials for authentication
+export interface AgentCredentials {
+  agentId: string;
+  apiKey?: string;
+  token?: string;
+  certificate?: string;
+  privateKey?: string;
+  metadata?: Record<string, any>;
+}
+
+// Additional types needed for authenticator
+export interface AuthToken {
+  token: string;
+  type: 'bearer';
+  expiresAt: Date;
+  scope: Permission[];
+  agentId: string;
+  sessionId: string;
+  refreshToken?: string;
+}
+
+export interface AuthSession {
+  sessionId: string;
+  agentId: string;
+  createdAt: Date;
+  expiresAt: Date;
+  lastActivity: Date;
+  ipAddress: string;
+  userAgent: string;
+  isActive: boolean;
+  permissions: Permission[];
+  roles: Role[];
+  metadata: Record<string, any>;
 }

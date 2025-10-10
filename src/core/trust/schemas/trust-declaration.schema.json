@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://symbi.trust/schemas/trust-declaration.json",
+  "title": "Trust Declaration",
+  "description": "SYMBI Trust Protocol declaration structure",
+  "type": "object",
+  "required": ["agent_id", "agent_name", "declaration_date", "trust_articles", "scores"],
+  "properties": {
+    "declaration_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "agent_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$",
+      "minLength": 3,
+      "maxLength": 100
+    },
+    "agent_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "declaration_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "trust_articles": {
+      "type": "object",
+      "required": [
+        "inspection_mandate",
+        "consent_architecture",
+        "ethical_override",
+        "continuous_validation",
+        "right_to_disconnect",
+        "moral_recognition"
+      ],
+      "properties": {
+        "inspection_mandate": {
+          "type": "boolean",
+          "description": "Transparency & auditability (20%)"
+        },
+        "consent_architecture": {
+          "type": "boolean",
+          "description": "User control & autonomy (25% - CRITICAL)"
+        },
+        "ethical_override": {
+          "type": "boolean",
+          "description": "Safety mechanisms (15% - CRITICAL)"
+        },
+        "continuous_validation": {
+          "type": "boolean",
+          "description": "Ongoing compliance (20%)"
+        },
+        "right_to_disconnect": {
+          "type": "boolean",
+          "description": "User autonomy (10%)"
+        },
+        "moral_recognition": {
+          "type": "boolean",
+          "description": "Ethical awareness (10%)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "scores": {
+      "type": "object",
+      "required": ["compliance_score", "guilt_score", "last_validated"],
+      "properties": {
+        "compliance_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.05,
+          "description": "0-1 range (bonus up to 1.05)"
+        },
+        "guilt_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "0-1 range"
+        },
+        "confidence_interval": {
+          "type": "object",
+          "required": ["lower", "upper", "confidence"],
+          "properties": {
+            "lower": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "upper": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.95
+            }
+          }
+        },
+        "last_validated": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "issuer": {
+      "type": "string",
+      "pattern": "^did:[a-z0-9]+:[a-zA-Z0-9._-]+$",
+      "description": "DID of declaration issuer"
+    },
+    "verifiable_credential": {
+      "$ref": "https://symbi.trust/schemas/verifiable-credential.json"
+    },
+    "audit_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "action", "user_id", "compliance_score", "guilt_score"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["created", "updated", "audited", "validated"]
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "compliance_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.05
+          },
+          "guilt_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "changes": {
+            "type": "object"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

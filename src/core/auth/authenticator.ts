@@ -16,7 +16,7 @@ import {
   RateLimitConfig,
   AuthenticationError,
   RateLimitError
-} from './auth-types';
+} from './types';
 
 export class Authenticator {
   private sessions: Map<string, AuthSession> = new Map();
@@ -29,30 +29,35 @@ export class Authenticator {
 
   constructor(config?: Partial<AuthConfig>) {
     this.config = {
-      method: 'jwt',
-      jwt: {
-        secret: process.env.JWT_SECRET || 'default-secret-change-in-production',
-        algorithm: 'HS256',
-        expiresIn: 3600, // 1 hour
-        issuer: 'symbi-symphony',
-        audience: 'symbi-agents'
+      jwtSecret: process.env.JWT_SECRET || 'default-secret-change-in-production',
+      jwtExpiresIn: '1h',
+      refreshTokenExpiresIn: '7d',
+      sessionTimeout: 3600,
+      maxConcurrentSessions: 5,
+      passwordPolicy: {
+        minLength: 8,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true
+      },
+      mfa: {
+        enabled: false,
+        methods: ['totp'],
+        required: false,
+        backupCodes: false
+      },
+      rateLimit: {
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        maxRequests: 100,
+        skipSuccessfulRequests: false,
+        skipFailedRequests: false
       },
       ...config
     };
 
-    this.mfaConfig = {
-      enabled: false,
-      methods: ['totp'],
-      required: false,
-      backupCodes: false
-    };
-
-    this.rateLimitConfig = {
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      maxRequests: 100,
-      skipSuccessfulRequests: false,
-      skipFailedRequests: false
-    };
+    this.mfaConfig = this.config.mfa;
+    this.rateLimitConfig = this.config.rateLimit;
 
     // Clean up expired sessions and tokens periodically
     setInterval(() => this.cleanup(), 60000); // Every minute
@@ -71,7 +76,7 @@ export class Authenticator {
       
       if (!isValid) {
         await this.logSecurityEvent({
-          type: 'failed_login',
+          type: 'login_failure',
           agentId: credentials.agentId,
           details: { reason: 'invalid_credentials' },
           severity: 'medium'
@@ -89,7 +94,7 @@ export class Authenticator {
       const token = await this.generateToken(session);
 
       await this.logSecurityEvent({
-        type: 'login',
+        type: 'login_success',
         agentId: credentials.agentId,
         details: { sessionId: session.sessionId },
         severity: 'low'
@@ -125,7 +130,7 @@ export class Authenticator {
       if (token.expiresAt < new Date()) {
         this.tokens.delete(tokenString);
         await this.logSecurityEvent({
-          type: 'token_expired',
+          type: 'token_refresh',
           agentId: token.agentId,
           details: { tokenType: token.type },
           severity: 'low'
@@ -232,33 +237,9 @@ export class Authenticator {
    * Validate credentials based on auth method
    */
   private async validateCredentials(credentials: AgentCredentials): Promise<boolean> {
-    switch (this.config.method) {
-      case 'api_key':
-        return this.validateApiKey(credentials);
-      
-      case 'jwt':
-        return this.validateJwtCredentials(credentials);
-      
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Validate API key credentials
-   */
-  private async validateApiKey(credentials: AgentCredentials): Promise<boolean> {
     // In a real implementation, this would check against a database
     // For now, we'll use a simple validation
     return !!(credentials.apiKey && credentials.agentId);
-  }
-
-  /**
-   * Validate JWT credentials
-   */
-  private async validateJwtCredentials(credentials: AgentCredentials): Promise<boolean> {
-    // In a real implementation, this would validate against stored credentials
-    return !!(credentials.agentId && (credentials.token || credentials.password));
   }
 
   /**
@@ -267,7 +248,7 @@ export class Authenticator {
   private async createSession(agentId: string): Promise<AuthSession> {
     const sessionId = this.generateSessionId();
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + (this.config.jwt?.expiresIn || 3600) * 1000);
+    const expiresAt = new Date(now.getTime() + this.config.sessionTimeout * 1000);
 
     const session: AuthSession = {
       sessionId,

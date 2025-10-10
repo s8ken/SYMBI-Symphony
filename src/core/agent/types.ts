@@ -4,9 +4,9 @@
  */
 
 // Core Agent Types
-export type AgentType = 
+export type AgentType =
   | 'repository_manager'
-  | 'website_manager' 
+  | 'website_manager'
   | 'code_reviewer'
   | 'tester'
   | 'deployer'
@@ -15,6 +15,103 @@ export type AgentType =
   | 'coordinator';
 
 export type AgentStatus = 'active' | 'idle' | 'busy' | 'error' | 'offline';
+
+// Trust Protocol Types
+export interface TrustArticles {
+  inspection_mandate: boolean;
+  consent_architecture: boolean;
+  ethical_override: boolean;
+  continuous_validation: boolean;
+  right_to_disconnect: boolean;
+  moral_recognition: boolean;
+}
+
+export interface TrustScores {
+  compliance_score: number;  // 0-1 range
+  guilt_score: number;       // 0-1 range
+  confidence_interval?: {
+    lower: number;
+    upper: number;
+    confidence: number;
+  };
+  last_validated: Date;
+}
+
+export interface TrustDeclaration {
+  declaration_id?: string;
+  agent_id: string;
+  agent_name: string;
+  declaration_date: Date;
+  trust_articles: TrustArticles;
+  scores: TrustScores;
+  issuer?: string;           // DID of issuer
+  verifiable_credential?: VerifiableCredential;
+  audit_history?: TrustAuditEntry[];
+}
+
+export interface TrustAuditEntry {
+  timestamp: Date;
+  action: 'created' | 'updated' | 'audited' | 'validated';
+  user_id: string;
+  compliance_score: number;
+  guilt_score: number;
+  changes?: any;
+  notes?: string;
+}
+
+export interface VerifiableCredential {
+  '@context': string[];
+  type: string[];
+  issuer: string;
+  issuanceDate: string;
+  expirationDate?: string;
+  credentialSubject: any;
+  proof: CredentialProof;
+}
+
+export interface CredentialProof {
+  type: string;
+  created: string;
+  verificationMethod: string;
+  proofPurpose: string;
+  proofValue: string;
+}
+
+export interface DIDDocument {
+  '@context': string[];
+  id: string;
+  verificationMethod: VerificationMethod[];
+  authentication: string[];
+  assertionMethod: string[];
+  service?: ServiceEndpoint[];
+}
+
+export interface VerificationMethod {
+  id: string;
+  type: string;
+  controller: string;
+  publicKeyMultibase?: string;
+  publicKeyJwk?: any;
+}
+
+export interface ServiceEndpoint {
+  id: string;
+  type: string;
+  serviceEndpoint: string;
+}
+
+export type TrustLevel = 'untrusted' | 'low' | 'medium' | 'high' | 'verified';
+
+export interface TrustMetrics {
+  total_declarations: number;
+  average_compliance: number;
+  average_guilt: number;
+  trust_level: TrustLevel;
+  trust_trend: 'improving' | 'stable' | 'declining';
+  last_declaration_date?: Date;
+  network_score?: number;
+  diversity_score?: number;
+}
 
 export type TaskStatus = 'pending' | 'assigned' | 'in_progress' | 'blocked' | 'completed' | 'failed';
 
@@ -52,6 +149,8 @@ export interface AgentConfig {
   webhookUrl?: string;
   capabilities: AgentCapability[];
   permissions: AgentPermission[];
+  did?: string;                       // Decentralized Identifier
+  trustDeclaration?: TrustDeclaration;
   metadata?: Record<string, any>;
 }
 
@@ -75,6 +174,8 @@ export interface AgentRegistration {
   webhook_url?: string;
   capabilities: AgentCapability[];
   permissions: AgentPermission[];
+  did?: string;
+  trust_articles?: TrustArticles;
   metadata?: Record<string, any>;
 }
 
@@ -82,6 +183,9 @@ export interface AgentRegistrationResponse {
   success: boolean;
   agent_id: string;
   api_key: string;
+  did?: string;
+  trust_scores?: TrustScores;
+  trust_level?: TrustLevel;
   message?: string;
 }
 
@@ -213,7 +317,7 @@ export interface ResourceUsage {
   };
 }
 
-export interface SystemMetrics {
+export interface AgentSystemMetrics {
   total_agents: number;
   active_agents: number;
   total_tasks: number;
@@ -272,8 +376,8 @@ export interface WorkflowExecution {
 // API Response Types
 export interface ApiResponse<T = any> {
   success: boolean;
-  data?: T;
-  error?: string;
+  data?: T | null;
+  error?: string | null;
   message?: string;
   timestamp?: string;
 }
@@ -461,4 +565,24 @@ export interface SystemConfig {
     tasks_per_hour: number;
     api_calls_per_minute: number;
   };
+}
+
+// Main Agent Interface
+export interface Agent {
+  id: string;
+  name: string;
+  type: AgentType;
+  status: AgentStatus;
+  config: AgentConfig;
+  capabilities: AgentCapability[];
+  permissions: AgentPermission[];
+  did?: string;
+  trustDeclaration?: TrustDeclaration;
+  trustMetrics?: TrustMetrics;
+  trustLevel?: TrustLevel;
+  currentTask?: AgentTask;
+  metadata: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+  lastActivity: Date;
 }

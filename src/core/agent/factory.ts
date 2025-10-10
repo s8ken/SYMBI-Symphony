@@ -3,8 +3,11 @@
  * Factory for creating and configuring different types of AI agents
  */
 
-import { SymbiAgentSDK } from './agent-sdk';
-import { AgentConfig, AgentType, AgentCapability, AgentPermission } from './agent-types';
+import { SymbiAgentSDK } from './sdk';
+import { AgentConfig, AgentType, AgentCapability, AgentPermission, TrustArticles, TrustDeclaration } from './types';
+import { trustScoring } from '../trust/scoring';
+import { trustValidator } from '../trust/validator';
+import { didManager } from '../trust/did';
 
 export interface AgentTemplate {
   type: AgentType;
@@ -269,7 +272,60 @@ export class AgentFactory {
       }
     }
 
+    // Validate DID if present
+    if (config.did) {
+      const didValidation = trustValidator.validateDID(config.did);
+      if (!didValidation.valid) {
+        errors.push(didValidation.error!);
+      }
+    }
+
+    // Validate trust declaration if present
+    if (config.trustDeclaration) {
+      const trustValidation = trustValidator.validateTrustDeclaration(config.trustDeclaration);
+      if (!trustValidation.valid) {
+        errors.push(...trustValidation.errors);
+      }
+    }
+
     return { valid: errors.length === 0, errors };
+  }
+
+  /**
+   * Create trust declaration for an agent
+   */
+  static createTrustDeclaration(
+    agentId: string,
+    agentName: string,
+    trustArticles: TrustArticles
+  ): TrustDeclaration {
+    // Validate trust articles
+    const validation = trustValidator.validateTrustArticles(trustArticles);
+    if (!validation.valid) {
+      throw new Error(`Invalid trust articles: ${validation.errors.join(', ')}`);
+    }
+
+    // Calculate scores
+    const scoringResult = trustScoring.calculateScores(trustArticles);
+
+    return {
+      agent_id: agentId,
+      agent_name: agentName,
+      declaration_date: new Date(),
+      trust_articles: trustArticles,
+      scores: {
+        compliance_score: scoringResult.compliance_score,
+        guilt_score: scoringResult.guilt_score,
+        last_validated: new Date()
+      }
+    };
+  }
+
+  /**
+   * Generate DID for an agent
+   */
+  static generateDID(agentId: string, method: 'web' | 'key' | 'ethr' | 'ion' = 'web'): string {
+    return didManager.generateDID(agentId, { method });
   }
 
   /**

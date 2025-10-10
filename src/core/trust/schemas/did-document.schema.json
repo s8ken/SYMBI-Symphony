@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://symbi.trust/schemas/did-document.json",
+  "title": "DID Document",
+  "description": "W3C DID Core compliant DID Document",
+  "type": "object",
+  "required": ["@context", "id", "verificationMethod", "authentication"],
+  "properties": {
+    "@context": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "minItems": 1,
+      "contains": {
+        "const": "https://www.w3.org/ns/did/v1"
+      }
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^did:[a-z0-9]+:[a-zA-Z0-9._-]+$",
+      "description": "DID identifier following did:method:identifier format"
+    },
+    "controller": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^did:[a-z0-9]+:[a-zA-Z0-9._-]+$"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^did:[a-z0-9]+:[a-zA-Z0-9._-]+$"
+          }
+        }
+      ]
+    },
+    "verificationMethod": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "controller"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "Ed25519VerificationKey2020",
+              "JsonWebKey2020",
+              "EcdsaSecp256k1VerificationKey2019",
+              "RsaVerificationKey2018"
+            ]
+          },
+          "controller": {
+            "type": "string",
+            "pattern": "^did:[a-z0-9]+:[a-zA-Z0-9._-]+$"
+          },
+          "publicKeyMultibase": {
+            "type": "string",
+            "pattern": "^z[1-9A-HJ-NP-Za-km-z]+$"
+          },
+          "publicKeyJwk": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "authentication": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          {
+            "type": "object"
+          }
+        ]
+      }
+    },
+    "assertionMethod": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          {
+            "type": "object"
+          }
+        ]
+      }
+    },
+    "keyAgreement": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          {
+            "type": "object"
+          }
+        ]
+      }
+    },
+    "capabilityInvocation": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          {
+            "type": "object"
+          }
+        ]
+      }
+    },
+    "capabilityDelegation": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          {
+            "type": "object"
+          }
+        ]
+      }
+    },
+    "service": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "serviceEndpoint"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri"
+          },
+          "type": {
+            "type": "string"
+          },
+          "serviceEndpoint": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

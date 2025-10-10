@@ -1,53 +1,38 @@
 /**
- * Authentication Module - SYMBI Symphony
+ * Authentication & Authorization Module - SYMBI Symphony
  * 
- * Consolidated authentication and authorization services for the SYMBI AI Agent ecosystem.
- * Provides secure authentication, role-based access control, and JWT token management.
+ * Comprehensive authentication, authorization, and security management
+ * for the SYMBI AI Agent ecosystem.
  */
 
-export * from './auth-types';
+import { Authenticator } from './authenticator';
+import { Authorizer } from './authorizer';
+import { JwtHelper } from './jwt-helper';
+
+export * from './types';
 export * from './authenticator';
 export * from './authorizer';
 export * from './jwt-helper';
 
 // Convenience exports
 export { Authenticator } from './authenticator';
-export { Authorizer, authorizer } from './authorizer';
+export { Authorizer } from './authorizer';
 export { JwtHelper } from './jwt-helper';
 
+// Create default instances
+export const defaultJwtHelper = JwtHelper;
+export const defaultAuthenticator = new Authenticator();
+export const defaultAuthorizer = new Authorizer();
+
 // Convenience functions
-export async function authenticate(credentials: any): Promise<any> {
-  const authenticator = new Authenticator();
-  return authenticator.authenticate(credentials);
+export function createAuthenticator(config?: any) {
+  return new Authenticator(config);
 }
 
-export async function checkPermission(context: any, permission: string): Promise<boolean> {
-  return authorizer.hasPermission(context, permission);
+export function createAuthorizer() {
+  return new Authorizer();
 }
 
-export async function assignRole(agentId: string, role: string): Promise<void> {
-  return authorizer.assignRole(agentId, role);
-}
-
-export function createAuthMiddleware() {
-  return async (req: any, res: any, next: any) => {
-    try {
-      const token = req.headers.authorization?.replace('Bearer ', '');
-      if (!token) {
-        return res.status(401).json({ error: 'No token provided' });
-      }
-
-      const authenticator = new Authenticator();
-      const session = await authenticator.validateToken(token);
-      
-      if (!session) {
-        return res.status(401).json({ error: 'Invalid token' });
-      }
-
-      req.authContext = authorizer.createAuthContext(session.agentId);
-      next();
-    } catch (error) {
-      res.status(401).json({ error: 'Authentication failed' });
-    }
-  };
+export function createJwtHelper() {
+  return JwtHelper;
 }

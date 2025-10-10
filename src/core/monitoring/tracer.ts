@@ -161,7 +161,7 @@ export class Tracer extends EventEmitter {
     // Remove from active spans if buffer is full
     if (this.spans.size > this.config.maxSpans) {
       const oldestSpanId = this.spans.keys().next().value;
-      this.spans.delete(oldestSpanId);
+      if (oldestSpanId) this.spans.delete(oldestSpanId);
     }
   }
 

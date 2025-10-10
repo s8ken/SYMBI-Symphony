@@ -5,6 +5,11 @@
  * for the SYMBI AI Agent ecosystem.
  */
 
+import { MetricsCollector } from './metrics-collector';
+import { Logger } from './logger';
+import { AlertManager } from './alert-manager';
+import { Tracer } from './tracer';
+
 export * from './metrics-collector';
 export * from './logger';
 export * from './alert-manager';
@@ -20,7 +25,14 @@ export { Tracer } from './tracer';
 export const defaultMetricsCollector = new MetricsCollector();
 export const defaultLogger = new Logger();
 export const defaultAlertManager = new AlertManager(defaultMetricsCollector);
-export const defaultTracer = Tracer.getInstance();
+export const defaultTracer = new Tracer({
+  serviceName: 'symbi-symphony',
+  samplingRate: 1.0,
+  maxSpans: 1000,
+  flushInterval: 5000,
+  exporters: [],
+  enableAutoInstrumentation: true
+});
 
 // Convenience functions
 export function createLogger(config?: any) {
@@ -36,5 +48,13 @@ export function createAlertManager(metricsCollector?: MetricsCollector) {
 }
 
 export function createTracer(config?: any) {
-  return Tracer.getInstance(config);
+  const defaultConfig = {
+    serviceName: 'symbi-symphony',
+    samplingRate: 1.0,
+    maxSpans: 1000,
+    flushInterval: 5000,
+    exporters: [],
+    enableAutoInstrumentation: true
+  };
+  return new Tracer({ ...defaultConfig, ...config });
 }

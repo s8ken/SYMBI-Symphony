@@ -786,7 +786,7 @@ export class AlertManager extends EventEmitter {
   }
 
   /**
-   * Get alert by ID
+   * Get specific alert
    */
   getAlert(id: string): Alert | undefined {
     return this.alerts.get(id);
@@ -801,18 +801,22 @@ export class AlertManager extends EventEmitter {
   }
 
   /**
-   * Clean up old alerts and history
+   * Cleanup old alerts and history
    */
   private cleanup(): void {
-    const cutoff = Date.now() - (this.config.retentionPeriod * 1000);
-    
+    const now = Date.now();
+    const retentionMs = this.config.retentionPeriod * 1000;
+
     // Remove old resolved alerts
     for (const [id, alert] of this.alerts.entries()) {
-      if (alert.status === 'resolved' && alert.endsAt && alert.endsAt.getTime() < cutoff) {
-        this.alerts.delete(id);
+      if (alert.status === 'resolved' && alert.endsAt) {
+        const age = now - alert.endsAt.getTime();
+        if (age > retentionMs) {
+          this.alerts.delete(id);
+        }
       }
     }
-    
+
     // Limit alert history
     if (this.alertHistory.length > this.config.maxAlerts) {
       this.alertHistory = this.alertHistory.slice(-this.config.maxAlerts);
@@ -823,7 +827,7 @@ export class AlertManager extends EventEmitter {
    * Generate unique ID
    */
   private generateId(): string {
-    return `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return Math.random().toString(36).substr(2, 9);
   }
 
   /**
@@ -858,42 +862,43 @@ export class AlertManager extends EventEmitter {
     alertsByStatus: Record<AlertStatus, number>;
     alertsBySeverity: Record<AlertSeverity, number>;
   } {
-    const activeAlerts = this.getActiveAlerts();
-    const allAlerts = this.getAllAlerts();
-    
+    const alerts = Array.from(this.alerts.values());
+    const channels = Array.from(this.channels.values());
+    const rules = Array.from(this.rules.values());
+
     const alertsByStatus: Record<AlertStatus, number> = {
       pending: 0,
       firing: 0,
       resolved: 0,
       silenced: 0
     };
-    
+
     const alertsBySeverity: Record<AlertSeverity, number> = {
       low: 0,
       medium: 0,
       high: 0,
       critical: 0
     };
-    
-    allAlerts.forEach(alert => {
+
+    alerts.forEach(alert => {
       alertsByStatus[alert.status]++;
       alertsBySeverity[alert.severity]++;
     });
-    
+
     return {
-      totalRules: this.rules.size,
-      enabledRules: Array.from(this.rules.values()).filter(r => r.enabled).length,
-      totalChannels: this.channels.size,
-      enabledChannels: Array.from(this.channels.values()).filter(c => c.enabled).length,
-      activeAlerts: activeAlerts.length,
-      totalAlerts: allAlerts.length,
+      totalRules: rules.length,
+      enabledRules: rules.filter(r => r.enabled).length,
+      totalChannels: channels.length,
+      enabledChannels: channels.filter(c => c.enabled).length,
+      activeAlerts: alerts.filter(a => a.status === 'firing' || a.status === 'pending').length,
+      totalAlerts: alerts.length,
       alertsByStatus,
       alertsBySeverity
     };
   }
 
   /**
-   * Destroy the alert manager
+   * Destroy alert manager
    */
   destroy(): void {
     this.stopEvaluation();
