@@ -1,0 +1,483 @@
+.
+├── CODEOWNERS
+├── CODE_REVIEW_API.md
+├── COMPREHENSIVE_TEST_REPORT.md
+├── DEPLOYMENT.md
+├── DEPLOYMENT_CONTINUITY_PLAN.md
+├── DEPLOY_TO_VERCEL.md
+├── DID_VC_INTEGRATION.md
+├── Dockerfile
+├── GPT4-RECOMMENDATIONS-IMPLEMENTATION.md
+├── LICENSE
+├── MONGODB_SCHEMAS.md
+├── PRIVACY.md
+├── Procfile
+├── README.md
+├── SCORING_ALGORITHM.md
+├── SECURITY.md
+├── SECURITY_AUDIT_REPORT.md
+├── SHIP_READY_IMPROVEMENTS.md
+├── SYMBI - The First Sovereign AI.html
+├── SYMBI_UAT_NOTEBOOK.md
+├── UPDATES
+│   ├── DIVERGENCE.md
+│   ├── PRIVACY_Version2.md
+│   ├── README_Version2-2.md
+│   ├── SECURITY_Version5.md
+│   ├── github_ISSUE_TEMPLATE_security_Version2.md
+│   ├── github_PULL_REQUEST_TEMPLATE_Version2.md
+│   └── github_workflows_codeql_Version2.yml
+├── YCQ-Website-main
+│   ├── README.md
+│   ├── eslint.config.mjs
+│   ├── next.config.ts
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.mjs
+│   ├── src
+│   │   └── app
+│   └── tsconfig.json
+├── add-vercel-env.sh
+├── api
+│   ├── debug.js
+│   ├── health.js
+│   ├── index.js
+│   └── test.js
+├── archives
+│   ├── AI Ethics Research Case Study - Claude (8_29_2025 12：54：38 PM).html
+│   ├── AI Image Capabilities - Claude (8_29_2025 12：54：46 PM).html
+│   ├── AI Interaction Performance Art - Claude (8_29_2025 12：54：12 PM).html
+│   ├── AI Symbolic Governance Framework - Claude (8_29_2025 12：54：42 PM).html
+│   ├── AI Team Collaboration Invitation - Claude (8_29_2025 12：54：20 PM).html
+│   ├── Asymmetrical Reflections and AI Consciousness - Claude (8_29_2025 12：55：17 PM).html
+│   ├── Big Surprise Button - Big surprise revealed.html
+│   ├── Creative AI Collaboration Exploration - Claude (8_29_2025 3：25：47 PM).html
+│   ├── Creative AI Collaboration Exploration - Claude.html
+│   ├── DeepSeek Conversation Review Request - Claude (8_29_2025 12：55：22 PM).html
+│   ├── Draft Review Request - Claude (8_29_2025 12：55：28 PM).html
+│   ├── Git Repository Code Review - Claude (8_29_2025 12：53：55 PM).html
+│   ├── GitHub Repository Analysis Request - Claude (8_29_2025 12：54：08 PM).html
+│   ├── Influencing Ideas That Work - Claude (8_29_2025 12：55：11 PM).html
+│   ├── Investigating the Website ＂primeupyour.life＂ - Claude (8_29_2025 12：53：11 PM).html
+│   ├── Lumos Project Molecular Orbital Research - Claude (8_29_2025 12：55：32 PM).html
+│   ├── Mysterious Conversation Fragment - Claude (8_29_2025 12：54：16 PM).html
+│   ├── OpenAI GitHub Commit Details - Claude (8_29_2025 12：54：51 PM).html
+│   ├── OpenRouter Integration Strategy - Claude (8_29_2025 12：55：04 PM).html
+│   ├── Origin of Haiku on Symbi.world - Claude (8_29_2025 12：53：31 PM).html
+│   ├── Origin of Haiku on Symbi.world - Claude.mhtml
+│   ├── PhD thesis summary.html
+│   ├── Remix of ASCII Binary Flow Animation - Claude (8_29_2025 12：53：51 PM).html
+│   ├── Review and summarize themes.html
+│   ├── SYMBI AI Interaction Analysis - Claude (8_29_2025 12：54：56 PM).html
+│   ├── Symbi - DeepSeek playing along.html
+│   ├── Symbi - Playing along explanation.html
+│   ├── Symbi.world Strategic Website Review - Claude (8_29_2025 12：53：46 PM).html
+│   ├── Wayfinder Terms of Service Concerns - Claude (8_29_2025 12：53：41 PM).html
+│   └── YQC GitHub Repository - Claude (8_29_2025 12：54：00 PM).html
+├── backend
+│   ├── app.js
+│   ├── bridge
+│   │   └── bridge.config.yaml
+│   ├── check-perplexity-agent.js
+│   ├── check-test-user.js
+│   ├── controllers
+│   │   ├── agent.controller.js
+│   │   ├── analysis.controller.js
+│   │   ├── assistant.controller.js
+│   │   ├── auth.controller.js
+│   │   ├── bridge.controller.js
+│   │   ├── capsule.controller.js
+│   │   ├── context.controller.js
+│   │   ├── conversation.controller.js
+│   │   ├── guardrails.controller.js
+│   │   ├── insights.controller.js
+│   │   ├── ledger.controller.js
+│   │   ├── llm.controller.js
+│   │   ├── project.controller.js
+│   │   ├── reports.controller.js
+│   │   ├── snowflake.controller.js
+│   │   ├── trust.controller.js
+│   │   └── user.controller.js
+│   ├── create-test-user.js
+│   ├── debug-agent-keys.js
+│   ├── debug-request.js
+│   ├── jest.config.js
+│   ├── metrics
+│   │   └── projects.metrics.js
+│   ├── middleware
+│   │   ├── auth.middleware.js
+│   │   ├── demo.middleware.js
+│   │   ├── metrics.middleware.js
+│   │   ├── security.middleware.js
+│   │   ├── trust.middleware.js
+│   │   └── verifyWebhookSignature.js
+│   ├── models
+│   │   ├── agent.model.js
+│   │   ├── buildJob.model.js
+│   │   ├── context.model.js
+│   │   ├── contextCapsule.model.js
+│   │   ├── conversation.model.js
+│   │   ├── interactionEvent.model.js
+│   │   ├── project.model.js
+│   │   ├── projectAudit.model.js
+│   │   ├── report.model.js
+│   │   ├── trust.model.js
+│   │   └── user.model.js
+│   ├── package-lock.json
+│   ├── reset-test-user.js
+│   ├── routes
+│   │   ├── agent.routes.js
+│   │   ├── analysis.routes.js
+│   │   ├── assistant.routes.js
+│   │   ├── auth.routes.js
+│   │   ├── bridge.routes.js
+│   │   ├── capsule.routes.js
+│   │   ├── context.js
+│   │   ├── conversation.routes.js
+│   │   ├── events.routes.js
+│   │   ├── guardrails.routes.js
+│   │   ├── insights.routes.js
+│   │   ├── ledger.routes.js
+│   │   ├── llm.routes.js
+│   │   ├── project.routes.js
+│   │   ├── reports.js
+│   │   ├── sessions.routes.js
+│   │   ├── snowflake.routes.js
+│   │   ├── trust.routes.js
+│   │   ├── user.routes.js
+│   │   └── webhook.routes.js
+│   ├── seeds
+│   │   └── demo-data.js
+│   ├── server.js
+│   ├── services
+│   │   ├── analysis.service.js
+│   │   ├── assistant.service.js
+│   │   ├── bridge.service.js
+│   │   ├── ledger.service.js
+│   │   ├── llm.util.js
+│   │   ├── queue.service.js
+│   │   ├── skyIntegration.service.js
+│   │   ├── snowflake.service.js
+│   │   └── weaviate.service.js
+│   ├── setup-missing-agents.js
+│   ├── test-assistant-integration.js
+│   ├── test-auth.js
+│   ├── test-html-contexts.js
+│   ├── test-weaviate.js
+│   ├── tests
+│   │   ├── integration
+│   │   ├── middleware
+│   │   ├── setup.js
+│   │   ├── test-utils.js
+│   │   └── trust.rbac.test.js
+│   ├── upload-html-contexts.js
+│   └── utils
+│       ├── hash.js
+│       └── socket.js
+├── checkhere
+├── code-review-test.html
+├── demo-server.js
+├── demo-working
+│   └── index.html
+├── docker-compose.observability.yml
+├── docker-compose.yml
+├── docs
+│   ├── ARCHITECTURE.md
+│   ├── EU_AI_ACT_COMPLIANCE.md
+│   ├── GOLDEN_PATH.md
+│   ├── INVESTORS.md
+│   ├── PROJECTS_INTEGRATION.md
+│   ├── PROJECT_ATLAS.md
+│   ├── README.consumer.md
+│   ├── README.enterprise.md
+│   └── api-viewer.html
+├── frontend
+│   ├── build
+│   │   ├── asset-manifest.json
+│   │   ├── index.html
+│   │   └── static
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   └── index.html
+│   └── src
+│       ├── App.js
+│       ├── components
+│       ├── config
+│       ├── context
+│       ├── hooks
+│       ├── index.css
+│       ├── index.js
+│       ├── lib
+│       ├── pages
+│       ├── styles
+│       └── tests
+├── github-maintenance
+│   ├── README.md
+│   ├── cleanup.sh
+│   └── reports
+│       ├── open_issues.tsv
+│       ├── open_prs.tsv
+│       ├── repositories.csv
+│       └── unread_notifications.txt
+├── improved-user-data-processor.js
+├── monitoring
+│   ├── alertmanager
+│   │   └── alertmanager.yml
+│   └── grafana
+│       └── dashboards
+├── monorepo
+│   ├── apps
+│   │   ├── console-sonate
+│   │   └── console-synergy
+│   ├── postman
+│   │   ├── collections
+│   │   └── environments
+│   └── services
+│       └── api
+├── nixpacks.toml
+├── observability
+│   ├── alertmanager
+│   │   └── config.yml
+│   ├── alerts
+│   │   └── symbi.rules.yml
+│   ├── grafana
+│   │   ├── dashboards
+│   │   └── provisioning
+│   ├── loki
+│   │   └── config.yaml
+│   ├── otel
+│   │   └── config.yaml
+│   ├── prometheus
+│   │   └── prometheus.yml
+│   └── promtail
+│       └── config.yaml
+├── openapi.yaml
+├── package-lock.json
+├── package.json
+├── playwright-report
+│   ├── data
+│   │   ├── 01e1fc478221906fd55de6cd691c7a0ccc2391bb.webm
+│   │   ├── 04af099af24cb20c9b91fc26428a53d426ecd4d3.md
+│   │   ├── 067ecd9e5838467a0cc3b5a99e6567a81375a64d.webm
+│   │   ├── 08bb7d34b4d9761f22b4abd5bd661e164e7270b1.webm
+│   │   ├── 09d1603fefed34cdf438534edb1a91e1ff25e433.webm
+│   │   ├── 0ba75d1d247ba66869f4e2ea089858c29534f5b7.webm
+│   │   ├── 0c8b84ae9ca465e565d9ac039067355bc69649d4.png
+│   │   ├── 0cd2f3289fe8d0557e07e7d60bb85f0de61a0c4f.webm
+│   │   ├── 0d8bd8a443cc01cc1677bb69b7ba4132d36dcebb.webm
+│   │   ├── 1366b64564b2380a3483ca841af4f2161d6b2e71.webm
+│   │   ├── 16186ff7b13899fe0fa5eae8c829aaf303200c31.webm
+│   │   ├── 1bc44bd9d437d113d5d68e3ff33ece8abcce79ba.md
+│   │   ├── 1e36ee2e5a15bd34d093b5efee666ae332aac26e.webm
+│   │   ├── 2613ea42457622212652fedb8dbc6f037b8aba41.webm
+│   │   ├── 2f8b7962ce6a5bc8365fada5e517c013e3068e1e.webm
+│   │   ├── 3028a13da5647ef642c9f86b50c09ca9a4f75833.webm
+│   │   ├── 3744184307eb7697f45dc50beb86fcc19adf465e.webm
+│   │   ├── 3f0a6e327299783ad1a8f18d69a4cd7096fc995f.png
+│   │   ├── 3fe3323e7ffd2fc061fa0849d49a1547c556c1b5.webm
+│   │   ├── 413c842efe90885c3836800d2b87378a8fc1e871.webm
+│   │   ├── 43ff033e779d40a887073892ebc7e49f36a4cbdc.png
+│   │   ├── 499c2f92b337bb22079f41ce59bc0bad550735f3.webm
+│   │   ├── 4eec430564cbfef44c6ee8fb95afe33763f413cd.webm
+│   │   ├── 53b9d246aab86c89fd75c5b128c129607ab2b456.webm
+│   │   ├── 55c7ec82ceef17b7f7d17e29cb42b5da51376cdd.md
+│   │   ├── 5648813fa3f1207cef233118722c71f9ff258560.webm
+│   │   ├── 5aed6f858007d11a214da1ca66eaac0c5e66e99f.webm
+│   │   ├── 5d9589dcbcbc8d8640e71eb48c6c3978df0fd776.webm
+│   │   ├── 60aa2da55c415bbaeaac106a607a6bacf84d934c.webm
+│   │   ├── 63664f973516badad0b4d167f2d5974b0d5e587a.webm
+│   │   ├── 64ed9750e784eac78f0de4e4a032fb982a2fa813.webm
+│   │   ├── 65c0c8e463f4a3cd80c0293443c7d3ee9651069b.webm
+│   │   ├── 65fce0ff3764b0792ac51d42c825b429efaed5f6.webm
+│   │   ├── 662f5e57ea9c2717578422081214930b604fff37.png
+│   │   ├── 692e07d0a3f29fce9cca5e05790e64e4bf6b3126.webm
+│   │   ├── 6a4a60b25276c577c61761283fe3889150e2624f.md
+│   │   ├── 6e24339a0ba4de56ebc73b2a0f98977c7fc6d228.webm
+│   │   ├── 74aa34c7a47b6d5acaa5ac3b4278931851977724.webm
+│   │   ├── 7548bd74da8fb88cca0b61857588c5a481bd6b32.webm
+│   │   ├── 7b07918d7e20deb72bfb2149783f325acc90b8d2.webm
+│   │   ├── 7b0ece8c2831ff46b2cdfd620e14c8b19b231201.png
+│   │   ├── 7cea6289ad9ef40f11a3a063730e9af037e0ad7c.webm
+│   │   ├── 7ff13ecfffdfb44e1c11c8eb0e2b87d70bce7a15.webm
+│   │   ├── 806ae64c56385e9cd1594ca4725b22620716f27c.webm
+│   │   ├── 833c3404988f5861ccca7e7f602e8338e9905651.png
+│   │   ├── 8670b868b30b581b3950a30eec98f45458bc3d83.webm
+│   │   ├── 882887b6dfbf133ac8a9e60ddd26ccda5a5ea6f3.webm
+│   │   ├── 895d1767e69de0bced64eb22e6df0b62db6e67c2.webm
+│   │   ├── 8a22583be800ddad56c36f5db59ab0adc86d8b92.png
+│   │   ├── 8ce7b9386c1db6845e0d36486642b5c870644cc7.png
+│   │   ├── 8d5c44fdb4abd2d2ef18937e7680d297defd54d9.webm
+│   │   ├── 933ed0f05e9c1eb6ccafdc7303c7e4ff23f18524.png
+│   │   ├── 959a3f90222697f2862574c228ee02e486c9563f.webm
+│   │   ├── 9901197e546942107da9e4c13e572cc8451e394e.webm
+│   │   ├── 99bf421e7fee82b8a2e7b7080ace66fc03a883ad.webm
+│   │   ├── 9a090b3d8bc9829cc9e60afd995d06a4e272c678.webm
+│   │   ├── 9e50562a13a44a0378f7b84b47effd97d0834fb9.webm
+│   │   ├── a5b325d519b63e4b732adb996ca0c2a5d9d05902.png
+│   │   ├── a8f8e986a904e276ac699efec2f2df141ee83e1b.webm
+│   │   ├── ac679734a13a4966e8f9574fb188eeb3e5f51d00.webm
+│   │   ├── acb7f7d83981fb8383507bc5af9f6f1ccbd708f5.webm
+│   │   ├── ada255643ab0d728831bef69fe390685cb7a8ecc.webm
+│   │   ├── ae29173382644dcc820d93f69e9336f159ce6855.png
+│   │   ├── b12129913006c62abfb983a0c110018747fea23e.png
+│   │   ├── b2c42ea10132227c2980654bd8f902971caebf3c.png
+│   │   ├── b4c2f90f96e039b2e125e1116293f4244b3dd563.webm
+│   │   ├── be7165d7e56bec02933129ed85819faf4db9808b.webm
+│   │   ├── c16a1a6782d81d4d90b72cdad17b19c83751354b.webm
+│   │   ├── c2004e36049025959cb63a97e89ec691274f5f2e.png
+│   │   ├── c43a599664dbb167dddea73fa998d7eccc150f1c.png
+│   │   ├── c53688acdc865c62c4fffa5c9480da22729fef96.webm
+│   │   ├── c5bcd7f570002a05e6356a1e28da6b57c2bbc853.webm
+│   │   ├── c61c3b31f18c89268524cdc604134cca5ec2d461.webm
+│   │   ├── c66a817ebd95e678b463447b519e2dc17716f095.webm
+│   │   ├── c907740330f0a84452f1f5c2ae33cabf5961d0b2.webm
+│   │   ├── ca1993f40bfb801266423d53634eee0de767cffd.png
+│   │   ├── cdd3938d9ea6a1dad0e0fbbcfa7e793912324c11.md
+│   │   ├── ce0741be86b43580272fda6568d5df3ce629b21e.webm
+│   │   ├── d4ef862300e58b98b1fc163d1ae7c0276a5c3761.webm
+│   │   ├── d616c20ab6639ded37fa687c2c74b80736102178.webm
+│   │   ├── d9d77f29328f9743683c1ffa214f1006e32de703.webm
+│   │   ├── da0d912a82d259ccad154460b58a3816191a4206.png
+│   │   ├── db5a92e7ffce8ca90bc66c8728c54875e155e0a1.webm
+│   │   ├── dc6510c1c4c27855bf549c37ea99405d45ba0eb8.webm
+│   │   ├── dd9ef1759b0e2caab0221940995c7fada0424d48.webm
+│   │   ├── e032bfc37ea71fd7a917da6cdc396a4617f43c4d.webm
+│   │   ├── e1801a2ae2fcc64e4560018f188792331d43c6c3.webm
+│   │   ├── e700ea0fb149b4ea87f84adfa338408b92a53ab7.webm
+│   │   ├── e9c1552dbcad838cdec0637e49d6253f43c3a657.webm
+│   │   ├── ed32a9c6c8c2705d34e2a4ef3e7dd46de723b18f.webm
+│   │   ├── f0265cc09e0b777e735e3a200aa517e93f4ff768.webm
+│   │   ├── f04b71308acafecf4abd3acf8caf904ca7340c00.webm
+│   │   ├── f1f78992045ff37debb458dce9a459dc1512d1e7.webm
+│   │   ├── f31f4d042216c6552ceff8812cf74de75867ce77.png
+│   │   ├── f383c1ab04f0381a83ca73c125f1bae12c28c39b.webm
+│   │   ├── f5942d32f7bd09e87f93431a4cd7ac7c414b7ba3.png
+│   │   ├── f78f281024f5ce05ee0241e379e889a6588a3edc.webm
+│   │   ├── f832c9e3632ec83a775f300bf21c27369f0c101d.webm
+│   │   ├── fbff4bf1c9be8c51e1e50b1966ca0642cdc5c103.png
+│   │   ├── fc72ec21c83472272bcf6cdbd5e52aaa03d7b83f.webm
+│   │   ├── fd714c967b87bec38c7e93715fbd0d0d2c53f4f5.png
+│   │   ├── fd7e4ddf9edfe82611de6d59266e22a5a10f7e36.png
+│   │   └── fe9a1339e8cc2b0c4b743babb5382c19bbf19097.png
+│   └── index.html
+├── playwright-results.json
+├── playwright.config.js
+├── railway-server.js
+├── railway.json
+├── repo_structure.txt
+├── scripts
+│   └── socket-check.mjs
+├── setup-vercel-env.md
+├── symbi-vscode-extension
+│   ├── package.json
+│   ├── src
+│   │   ├── extension.ts
+│   │   ├── ledgerView.ts
+│   │   ├── net.ts
+│   │   └── webviewHtml.ts
+│   └── tsconfig.json
+├── test-improvements.js
+├── test-results
+│   ├── accessibility-YCQ-Sonate-A-143dc-s-keyboard-navigation-works-chromium
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-143dc-s-keyboard-navigation-works-firefox
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-143dc-s-keyboard-navigation-works-mobile-chrome
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-143dc-s-keyboard-navigation-works-mobile-safari
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-143dc-s-keyboard-navigation-works-webkit
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-66f39-ain-landmark-and-visible-h1-chromium
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-66f39-ain-landmark-and-visible-h1-firefox
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-66f39-ain-landmark-and-visible-h1-mobile-chrome
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-66f39-ain-landmark-and-visible-h1-mobile-safari
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-66f39-ain-landmark-and-visible-h1-webkit
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-aa243-ty-Tests-form-accessibility-chromium
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-aa243-ty-Tests-form-accessibility-firefox
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-aa243-ty-Tests-form-accessibility-mobile-chrome
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-aa243-ty-Tests-form-accessibility-mobile-safari
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-aa243-ty-Tests-form-accessibility-webkit
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-ec9b1-ttributes-and-semantic-HTML-chromium
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-ec9b1-ttributes-and-semantic-HTML-firefox
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-ec9b1-ttributes-and-semantic-HTML-mobile-chrome
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   ├── accessibility-YCQ-Sonate-A-ec9b1-ttributes-and-semantic-HTML-mobile-safari
+│   │   ├── error-context.md
+│   │   ├── test-failed-1.png
+│   │   └── video.webm
+│   └── accessibility-YCQ-Sonate-A-ec9b1-ttributes-and-semantic-HTML-webkit
+│       ├── error-context.md
+│       ├── test-failed-1.png
+│       └── video.webm
+├── tests
+│   ├── e2e
+│   │   ├── accessibility.spec.js
+│   │   ├── api-integration.spec.js
+│   │   ├── demo-environment.spec.js
+│   │   ├── full-platform.spec.js
+│   │   ├── performance.spec.js
+│   │   ├── security.spec.js
+│   │   └── website.spec.js
+│   └── utils
+│       └── global-setup.js
+├── tools
+│   ├── SYMBI_Postman_Collection.json
+│   └── smoke.sh
+├── update-vercel-env.sh
+├── vercel
+│   └── frontend
+├── vercel.json
+└── website
+    └── package.json
+
+94 directories, 387 files

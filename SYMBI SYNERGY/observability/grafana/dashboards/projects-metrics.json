@@ -1,0 +1,55 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Projects Created",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "sum(projects_created_total)", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "Owner Transfers",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "sum(projects_owner_transfers_total)", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "Knowledge Items Ingested",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 4},
+      "targets": [{"expr": "sum(projects_knowledge_items_ingested_total)", "refId": "A"}]
+    },
+    {
+      "type": "graph",
+      "title": "Build Jobs Started",
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+      "targets": [{"expr": "rate(projects_build_jobs_started_total[5m])", "refId": "A"}],
+      "lines": true
+    },
+    {
+      "type": "graph",
+      "title": "Build Jobs Completed",
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+      "targets": [{"expr": "rate(projects_build_jobs_completed_total[5m])", "refId": "A"}],
+      "lines": true
+    },
+    {
+      "type": "heatmap",
+      "title": "Build Duration (s)",
+      "gridPos": {"x": 0, "y": 12, "w": 24, "h": 8},
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(projects_build_job_duration_seconds_bucket[5m])) by (le))", "refId": "A"}]
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "Projects - Collaboration & Builds",
+  "uid": "projects-metrics",
+  "version": 1
+}

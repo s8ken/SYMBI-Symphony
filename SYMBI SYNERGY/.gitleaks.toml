@@ -1,0 +1,55 @@
+# Gitleaks configuration for SYMBI
+title = "SYMBI Secret Detection"
+
+[allowlist]
+description = "Global allow list"
+commits = []
+paths = [
+  ".env.example",
+  "**/README.md",
+  "**/package.json",
+]
+regexes = [
+  # Allow test and example values
+  '''demo-.*''',
+  '''test-.*''',
+  '''placeholder.*''',
+  '''your_.*_here''',
+  '''example.*''',
+]
+
+[[rules]]
+description = "Generic API Key"
+id = "generic-api-key"
+regex = '''(?i)[a-z0-9_-]*api[_-]?key[a-z0-9_-]*\s*[:=]\s*['"]*[a-z0-9_-]{20,}['"]*'''
+tags = ["key", "API"]
+
+[[rules]]
+description = "OpenAI API Key"
+id = "openai-api-key"
+regex = '''sk-[a-zA-Z0-9]{48}'''
+tags = ["key", "OpenAI"]
+
+[[rules]]
+description = "Anthropic API Key"
+id = "anthropic-api-key"
+regex = '''sk-ant-api03-[a-zA-Z0-9_-]{95}'''
+tags = ["key", "Anthropic"]
+
+[[rules]]
+description = "JWT Secret"
+id = "jwt-secret"
+regex = '''(?i)jwt[_-]?secret[a-z0-9_-]*\s*[:=]\s*['"]*[a-z0-9_-]{10,}['"]*'''
+tags = ["secret", "JWT"]
+
+[[rules]]
+description = "MongoDB Connection String"
+id = "mongodb-uri"
+regex = '''mongodb(\+srv)?://[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+@[a-zA-Z0-9.-]+'''
+tags = ["database", "MongoDB"]
+
+[[rules]]
+description = "Private Key"
+id = "private-key"
+regex = '''-----BEGIN[A-Z ]+PRIVATE KEY-----'''
+tags = ["key", "private"]

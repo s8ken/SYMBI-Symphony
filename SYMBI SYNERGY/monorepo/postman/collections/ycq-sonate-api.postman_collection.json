@@ -1,0 +1,704 @@
+{
+  "info": {
+    "name": "YCQ Sonate Platform API",
+    "description": "Complete API collection for YCQ Sonate - AI Trust & Compliance Platform\n\n## Authentication\nThis collection uses JWT Bearer token authentication. First authenticate using the `/auth/login` endpoint, then use the returned token in subsequent requests.\n\n## Base URL\n- **Production:** `https://api.yseeku.com`\n- **Demo Environment:** `https://api.yseeku.com`\n\n## Key Features Tested\n- Authentication & Authorization (JWT/RBAC)\n- Cryptographic Audit Trails (Ed25519 signatures)\n- Multi-Provider AI Integration (OpenAI, Anthropic, etc.)\n- Trust Scoring & Metrics (TIS, FAR, PFI, LOI)\n- Policy Enforcement & Guardrails\n- Real-time Monitoring & Health Checks\n\n## Quick Start\n1. Set environment variables (baseUrl, email, password)\n2. Run \"Auth - Login\" to get your JWT token\n3. Token will be auto-set for all subsequent requests\n4. Explore endpoints in order: Health → Auth → AI → Audit → Metrics",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set base URL if not configured",
+          "if (!pm.environment.get('baseUrl')) {",
+          "    pm.environment.set('baseUrl', 'https://api.ycq.com');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.ycq.com",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🏥 Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/healthz",
+              "host": ["{{baseUrl}}"],
+              "path": ["healthz"]
+            },
+            "description": "Basic health check endpoint. Returns 200 if service is running."
+          },
+          "response": []
+        },
+        {
+          "name": "Readiness Check",
+          "request": {
+            "method": "GET", 
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/readyz",
+              "host": ["{{baseUrl}}"],
+              "path": ["readyz"]
+            },
+            "description": "Readiness check with database connectivity. Returns 200 if service is ready to handle requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Metrics (Prometheus)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["metrics"]
+            },
+            "description": "Prometheus metrics endpoint. Returns system and application metrics in Prometheus format."
+          },
+          "response": []
+        }
+      ],
+      "description": "System health and monitoring endpoints"
+    },
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"name\": \"Test User\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user account. Requires email verification in production."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Auto-extract JWT token from response",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.environment.set('jwt_token', response.token);",
+                  "        pm.test('JWT token extracted and saved', function () {",
+                  "            pm.expect(response.token).to.exist;",
+                  "        });",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"testpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticate user and receive JWT token. Token is automatically saved to environment for subsequent requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Get current user profile information. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Refresh JWT token before expiry."
+          },
+          "response": []
+        }
+      ],
+      "description": "User authentication and profile management"
+    },
+    {
+      "name": "🤖 AI Orchestration",
+      "item": [
+        {
+          "name": "List AI Providers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization", 
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ai/providers",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "providers"]
+            },
+            "description": "Get list of available AI providers and their models."
+          },
+          "response": []
+        },
+        {
+          "name": "Chat Completion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"openai\",\n  \"model\": \"gpt-4\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Analyze this customer feedback: 'Your service was disappointing and slow.'\"\n    }\n  ],\n  \"options\": {\n    \"temperature\": 0.7,\n    \"max_tokens\": 500\n  },\n  \"audit\": {\n    \"enabled\": true,\n    \"cryptographic_signing\": true\n  },\n  \"policy\": {\n    \"content_filter\": true,\n    \"pii_detection\": true,\n    \"escalation_threshold\": 0.8\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "chat"]
+            },
+            "description": "Send a chat completion request with audit trail and policy enforcement."
+          },
+          "response": []
+        },
+        {
+          "name": "Multi-Provider Orchestration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Summarize the key risks in this business proposal\",\n  \"orchestration\": {\n    \"strategy\": \"best_match\",\n    \"candidates\": [\n      {\n        \"provider\": \"openai\",\n        \"model\": \"gpt-4\"\n      },\n      {\n        \"provider\": \"anthropic\",\n        \"model\": \"claude-3-5-sonnet\"\n      }\n    ],\n    \"selection_criteria\": {\n      \"trust_score_weight\": 0.4,\n      \"capability_match_weight\": 0.3,\n      \"cost_weight\": 0.2,\n      \"latency_weight\": 0.1\n    }\n  },\n  \"context\": {\n    \"domain\": \"business_analysis\",\n    \"complexity\": \"high\",\n    \"compliance_framework\": \"SOC2\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/orchestrate",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "orchestrate"]
+            },
+            "description": "Intelligent multi-provider orchestration with trust-based selection."
+          },
+          "response": []
+        },
+        {
+          "name": "Get AI Agents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agents",
+              "host": ["{{baseUrl}}"],
+              "path": ["agents"]
+            },
+            "description": "List configured AI agents and their capabilities."
+          },
+          "response": []
+        }
+      ],
+      "description": "AI provider integration and orchestration endpoints"
+    },
+    {
+      "name": "📋 Audit & Ledger",
+      "item": [
+        {
+          "name": "Get Audit Trail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/audit/trail?limit=10&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["audit", "trail"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset", 
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Retrieve audit trail entries with pagination."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Audit Trail",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entry_id\": \"audit_2024_0907_15h23m_a7f8b2\",\n  \"verify_signature\": true,\n  \"verify_chain\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/audit/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["audit", "verify"]
+            },
+            "description": "Verify cryptographic integrity of audit trail entries."
+          },
+          "response": []
+        },
+        {
+          "name": "Export Audit Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/audit/export?format=json&date_from=2024-09-01&date_to=2024-09-07",
+              "host": ["{{baseUrl}}"],
+              "path": ["audit", "export"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "json"
+                },
+                {
+                  "key": "date_from",
+                  "value": "2024-09-01"
+                },
+                {
+                  "key": "date_to",
+                  "value": "2024-09-07"
+                }
+              ]
+            },
+            "description": "Export audit data in various formats (JSON, CSV, XML)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trust Receipt",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/audit/receipt/{{transaction_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["audit", "receipt", "{{transaction_id}}"]
+            },
+            "description": "Get detailed trust receipt for a specific AI interaction."
+          },
+          "response": []
+        }
+      ],
+      "description": "Audit trail and cryptographic verification endpoints"
+    },
+    {
+      "name": "📊 Metrics & Analytics",
+      "item": [
+        {
+          "name": "Get Trust Metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/metrics/trust?period=30d",
+              "host": ["{{baseUrl}}"],
+              "path": ["metrics", "trust"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "30d"
+                }
+              ]
+            },
+            "description": "Get trust metrics including TIS, FAR-A, FAR-H, PFI, and LOI."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Performance Metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/metrics/performance?granularity=hour&limit=24",
+              "host": ["{{baseUrl}}"],
+              "path": ["metrics", "performance"],
+              "query": [
+                {
+                  "key": "granularity",
+                  "value": "hour"
+                },
+                {
+                  "key": "limit",
+                  "value": "24"
+                }
+              ]
+            },
+            "description": "Get system performance metrics over time."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Provider Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/metrics/providers",
+              "host": ["{{baseUrl}}"],
+              "path": ["metrics", "providers"]
+            },
+            "description": "Get usage statistics for each AI provider."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"report_type\": \"compliance\",\n  \"framework\": \"SOC2\",\n  \"date_range\": {\n    \"start\": \"2024-08-01\",\n    \"end\": \"2024-09-01\"\n  },\n  \"include_sections\": [\n    \"trust_metrics\",\n    \"audit_summary\",\n    \"security_events\",\n    \"policy_compliance\"\n  ],\n  \"format\": \"pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "generate"]
+            },
+            "description": "Generate compliance and trust reports."
+          },
+          "response": []
+        }
+      ],
+      "description": "Metrics, analytics, and reporting endpoints"
+    },
+    {
+      "name": "⚙️ Configuration",
+      "item": [
+        {
+          "name": "Get API Keys",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/config/api-keys",
+              "host": ["{{baseUrl}}"],
+              "path": ["config", "api-keys"]
+            },
+            "description": "List configured AI provider API keys (masked)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update API Key",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"openai\",\n  \"key\": \"sk-new-api-key-here\",\n  \"metadata\": {\n    \"description\": \"Updated OpenAI key for production\",\n    \"rate_limit\": 10000\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/config/api-keys",
+              "host": ["{{baseUrl}}"],
+              "path": ["config", "api-keys"]
+            },
+            "description": "Update AI provider API key configuration."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Policies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/config/policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["config", "policies"]
+            },
+            "description": "List configured governance policies."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PII Detection Policy\",\n  \"description\": \"Automatically detect and redact personally identifiable information\",\n  \"rules\": [\n    {\n      \"type\": \"content_filter\",\n      \"pattern\": \"\\\\b\\\\d{3}-\\\\d{2}-\\\\d{4}\\\\b\",\n      \"action\": \"redact\",\n      \"description\": \"Social Security Number detection\"\n    },\n    {\n      \"type\": \"content_filter\",\n      \"pattern\": \"\\\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\\\.[A-Z|a-z]{2,}\\\\b\",\n      \"action\": \"flag\",\n      \"description\": \"Email address detection\"\n    }\n  ],\n  \"enforcement\": {\n    \"strict_mode\": true,\n    \"escalation_required\": false\n  },\n  \"compliance_frameworks\": [\"GDPR\", \"CCPA\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/config/policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["config", "policies"]
+            },
+            "description": "Create new governance policy with rules and enforcement."
+          },
+          "response": []
+        }
+      ],
+      "description": "System configuration and policy management"
+    },
+    {
+      "name": "🔍 Context & Search",
+      "item": [
+        {
+          "name": "Create Context",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Customer Service Guidelines\",\n  \"description\": \"Best practices for customer service interactions\",\n  \"source_type\": \"document\",\n  \"data\": {\n    \"content\": \"Always maintain professional tone. Acknowledge customer concerns. Provide clear next steps. Escalate to manager if needed.\",\n    \"metadata\": {\n      \"version\": \"2.1\",\n      \"last_updated\": \"2024-09-01\",\n      \"department\": \"customer_success\"\n    }\n  },\n  \"tags\": [\"customer_service\", \"guidelines\", \"escalation\"],\n  \"trust_score\": 0.95\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/context",
+              "host": ["{{baseUrl}}"],
+              "path": ["context"]
+            },
+            "description": "Create new context for AI orchestration."
+          },
+          "response": []
+        },
+        {
+          "name": "Search Contexts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/context/search?query=customer service&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["context", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "customer service"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Semantic search across context database."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Context Recommendations",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"How should I handle an angry customer complaint?\",\n  \"domain\": \"customer_service\",\n  \"max_recommendations\": 3,\n  \"trust_threshold\": 0.8\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/context/recommend",
+              "host": ["{{baseUrl}}"],
+              "path": ["context", "recommend"]
+            },
+            "description": "Get contextual recommendations for AI orchestration."
+          },
+          "response": []
+        }
+      ],
+      "description": "Context management and semantic search"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+CI workflow run failed for main branch
+CI workflow run failed for main branch
+CodeQL workflow run failed for main branch
+CodeQL workflow run failed for main branch
+CodeQL workflow run failed for main branch
+CI/CD Pipeline workflow run failed for main branch
+CI/CD Pipeline workflow run failed for main branch
+CI/CD Pipeline workflow run failed for main branch
+CodeQL workflow run failed for main branch
+CodeQL workflow run failed for main branch
+CI/CD Pipeline workflow run failed for main branch
+CI/CD Pipeline workflow run failed for main branch
+chore(deps): bump express from 4.21.2 to 5.1.0
+chore(deps): bump @anthropic-ai/sdk from 0.60.0 to 0.61.0
+chore(deps-dev): bump concurrently from 8.2.2 to 9.2.1
+chore(deps): bump mongoose from 7.8.7 to 8.18.0
+chore(deps-dev): bump concurrently from 8.2.2 to 9.2.1
+chore(deps): bump openai from 5.16.0 to 5.19.1
+chore(deps): bump react from 18.3.1 to 19.1.1 in /frontend
+chore(deps): bump react-router-dom from 6.30.1 to 7.8.2 in /frontend
+chore(deps): bump openai from 5.16.0 to 5.19.1
+chore(deps): bump @anthropic-ai/sdk from 0.60.0 to 0.61.0
+CodeQL workflow run failed for main branch
+chore(deps): bump react-markdown from 9.1.0 to 10.1.0 in /frontend
+chore(deps): bump express-rate-limit from 8.0.1 to 8.1.0
+chore(deps): bump react-dom from 18.3.1 to 19.1.1 in /frontend
+chore(deps): bump dotenv from 16.6.1 to 17.2.2
+chore(deps): bump @mui/icons-material from 5.18.0 to 7.3.2 in /frontend
+CodeQL workflow run failed for main branch
+chore(deps): bump express from 4.21.2 to 5.1.0
+chore(deps): bump @mui/icons-material from 5.18.0 to 7.3.2 in /frontend
+chore(deps): bump react-router-dom from 6.30.1 to 7.8.2 in /frontend
+chore(deps-dev): bump jest from 30.1.1 to 30.1.3
+chore(deps-dev): bump jest from 30.1.1 to 30.1.3
+chore(deps): bump react from 18.3.1 to 19.1.1 in /frontend
+chore(deps): bump react-dom from 18.3.1 to 19.1.1 in /frontend
+chore(deps): bump react-markdown from 9.1.0 to 10.1.0 in /frontend
+chore(deps): bump dotenv from 16.6.1 to 17.2.2
+chore(deps): bump @mui/material from 5.18.0 to 7.3.2 in /frontend
+CI/CD Pipeline workflow run failed for main branch
+chore(deps): bump mongoose from 7.8.7 to 8.18.0
+chore(deps): bump @mui/material from 5.18.0 to 7.3.2 in /frontend
+CI/CD Pipeline workflow run failed for main branch
+UAT workflow run failed for main branch
+UAT workflow run failed for main branch
+Merge repo-cleanup/add-community-files branch - resolve package-lock.…
+CodeQL workflow run failed for main branch
+CI/CD Pipeline workflow run failed for main branch
+CodeQL workflow run failed for main branch
+CI/CD Pipeline workflow run failed for main branch

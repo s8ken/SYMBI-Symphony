@@ -1,0 +1,23 @@
+{
+  "name": "yabi-railway-integration-4",
+  "version": "1.0.0",
+  "description": "SYMBI Railway Integration 4",
+  "main": "lib/index.ts",
+  "scripts": {
+    "test": "jest",
+    "build": "next build",
+    "start": "next start",
+    "dev": "next dev"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.4.4",
+    "typescript": "^5.0.0"
+  }
+}

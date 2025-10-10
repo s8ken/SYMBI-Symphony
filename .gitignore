@@ -71,18 +71,6 @@ credentials/
 .npm
 .eslintcache
 
-# Duplicate/backup folders (not part of core repo)
-SYMBI SYNERGY_backup_*/
-trust-protocol-1/
-Agentverse/
-Tactical Command/
-SYMBI Vault/
-SYMBI SYNERGY/
-SYMBI RESONATE/
-
-# Documentation (keep in repo but ignore working drafts)
-# None currently
-
 # Local KMS storage (never commit keys!)
 kms-store/
 .kms/

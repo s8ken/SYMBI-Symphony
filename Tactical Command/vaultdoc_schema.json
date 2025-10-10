@@ -1,0 +1,34 @@
+{
+  "class": "VaultDoc",
+  "description": "SYMBI-Vault document chunks with embeddings for RAG retrieval",
+  "vectorizer": "none",
+  "vectorIndexType": "hnsw",
+  "vectorIndexConfig": {
+    "distance": "cosine",
+    "efConstruction": 128,
+    "maxConnections": 64,
+    "ef": 128,
+    "asyncEnabled": true
+  },
+  "invertedIndexConfig": {
+    "stopwords": { "preset": "en" },
+    "indexTimestamps": true,
+    "indexPropertyLength": true
+  },
+  "moduleConfig": {
+    "generative-openai": {
+      "model": "gpt-3.5-turbo"
+    }
+  },
+  "properties": [
+    { "name": "path",         "dataType": ["text"],   "description": "File path of the source document" },
+    { "name": "title",        "dataType": ["text"],   "description": "Document title (filename without extension)" },
+    { "name": "chunk_index",  "dataType": ["int"],    "description": "Index of this chunk within the document" },
+    { "name": "content",      "dataType": ["text"],   "description": "The actual text content of this chunk" },
+    { "name": "doc_id",       "dataType": ["text"],   "description": "Stable document ID (e.g., repo path hash)" },
+    { "name": "source",       "dataType": ["text"],   "description": "Source label, e.g., SYMBI-Vault" },
+    { "name": "tags",         "dataType": ["text[]"], "description": "Arbitrary labels for routing/filtering" },
+    { "name": "updated_at",   "dataType": ["date"],   "description": "Last modified time of the source doc" },
+    { "name": "metadata",     "dataType": ["text"],   "description": "JSON string with any additional metadata" }
+  ]
+}

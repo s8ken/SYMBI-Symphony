@@ -1,0 +1,58 @@
+/* Accessibility Focus Styles */
+:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+button:focus-visible, 
+[role="button"]:focus-visible, 
+input:focus-visible, 
+textarea:focus-visible,
+.MuiTextField-root input:focus-visible {
+  box-shadow: 0 0 0 3px rgba(37,99,235,.35);
+}
+
+/* Mobile Touch Targets */
+button, 
+.btn, 
+a.button-like,
+.MuiButton-root,
+.MuiIconButton-root {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Mobile Responsive Layout */
+@media (max-width: 480px) {
+  .toolbar, 
+  .metrics-grid {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .card {
+    padding: 12px;
+  }
+  
+  /* Ensure buttons are accessible on mobile */
+  .MuiButton-root {
+    padding: 12px 16px;
+    min-height: 48px;
+  }
+  
+  /* Better spacing for form elements */
+  .MuiTextField-root {
+    margin-bottom: 16px;
+  }
+  
+  /* Improve header responsiveness */
+  .MuiToolbar-root {
+    min-height: 56px;
+  }
+}
+
+/* Improve contrast for better readability */
+.MuiFormHelperText-root.Mui-error {
+  color: #d32f2f;
+  font-weight: 500;
+}
