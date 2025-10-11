@@ -1,0 +1,256 @@
+{
+  "dashboard": {
+    "name": "SYMBI Trust Protocol - Overview",
+    "description": "Comprehensive overview of SYMBI Trust Protocol metrics including trust scores, compliance rates, and governance activity",
+    "tags": ["symbi", "trust-protocol", "governance", "compliance"],
+    "is_private": false,
+    "layout": {
+      "grid_columns": 12,
+      "grid_rows": 20
+    },
+    "filters": [
+      {
+        "name": "date_range",
+        "type": "date_range",
+        "default": "30d",
+        "position": {"x": 0, "y": 0, "w": 3, "h": 1}
+      },
+      {
+        "name": "compliance_threshold",
+        "type": "number_range",
+        "min": 0,
+        "max": 1,
+        "default": [0.5, 1.0],
+        "position": {"x": 3, "y": 0, "w": 3, "h": 1}
+      },
+      {
+        "name": "agent_filter",
+        "type": "text_search",
+        "placeholder": "Filter by Agent ID",
+        "position": {"x": 6, "y": 0, "w": 3, "h": 1}
+      }
+    ],
+    "visualizations": [
+      {
+        "id": "trust_score_distribution",
+        "name": "Trust Score Distribution",
+        "type": "pie_chart",
+        "query_id": "trust_score_trends",
+        "position": {"x": 0, "y": 1, "w": 6, "h": 4},
+        "config": {
+          "data_field": "trust_score_range",
+          "value_field": "agent_count",
+          "colors": {
+            "0.9-1.0 (Excellent)": "#10B981",
+            "0.8-0.9 (Very Good)": "#34D399", 
+            "0.7-0.8 (Good)": "#FCD34D",
+            "0.6-0.7 (Fair)": "#F59E0B",
+            "0.5-0.6 (Poor)": "#EF4444",
+            "0.0-0.5 (Critical)": "#DC2626"
+          },
+          "show_legend": true,
+          "show_values": true
+        }
+      },
+      {
+        "id": "daily_declarations",
+        "name": "Daily Trust Declarations",
+        "type": "line_chart",
+        "query_id": "trust_declarations",
+        "position": {"x": 6, "y": 1, "w": 6, "h": 4},
+        "config": {
+          "x_axis": "date",
+          "y_axis": "total_declarations",
+          "line_color": "#3B82F6",
+          "fill_area": true,
+          "show_points": true,
+          "smooth_line": true
+        }
+      },
+      {
+        "id": "compliance_trends",
+        "name": "Compliance Score Trends",
+        "type": "area_chart",
+        "query_id": "trust_declarations",
+        "position": {"x": 0, "y": 5, "w": 8, "h": 4},
+        "config": {
+          "x_axis": "date",
+          "y_axes": [
+            {
+              "field": "avg_compliance_score",
+              "name": "Average Compliance",
+              "color": "#10B981"
+            },
+            {
+              "field": "high_compliance_percentage", 
+              "name": "High Compliance %",
+              "color": "#3B82F6"
+            }
+          ],
+          "fill_opacity": 0.3,
+          "show_legend": true
+        }
+      },
+      {
+        "id": "key_metrics",
+        "name": "Key Metrics",
+        "type": "metric_cards",
+        "query_id": "trust_score_trends",
+        "position": {"x": 8, "y": 5, "w": 4, "h": 4},
+        "config": {
+          "metrics": [
+            {
+              "name": "Avg Trust Score",
+              "field": "avg_trust_score",
+              "format": "percentage",
+              "color": "#10B981",
+              "target": 0.8
+            },
+            {
+              "name": "Total Agents",
+              "field": "total_agents", 
+              "format": "number",
+              "color": "#3B82F6"
+            },
+            {
+              "name": "High Trust Agents",
+              "field": "high_trust_agents",
+              "format": "number",
+              "color": "#34D399"
+            },
+            {
+              "name": "Critical Risk Agents",
+              "field": "low_trust_agents",
+              "format": "number", 
+              "color": "#EF4444"
+            }
+          ]
+        }
+      },
+      {
+        "id": "trust_articles_adoption",
+        "name": "Trust Articles Adoption Rates",
+        "type": "horizontal_bar_chart",
+        "query_id": "trust_declarations",
+        "position": {"x": 0, "y": 9, "w": 12, "h": 4},
+        "config": {
+          "categories": [
+            "inspection_mandate_adoption",
+            "consent_architecture_adoption", 
+            "ethical_override_adoption",
+            "continuous_validation_adoption",
+            "right_to_disconnect_adoption",
+            "moral_recognition_adoption"
+          ],
+          "category_labels": [
+            "Inspection Mandate (20%)",
+            "Consent Architecture (25%)",
+            "Ethical Override (15%)", 
+            "Continuous Validation (20%)",
+            "Right to Disconnect (10%)",
+            "Moral Recognition (10%)"
+          ],
+          "colors": ["#10B981", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444", "#6B7280"],
+          "show_values": true,
+          "max_value": 100
+        }
+      },
+      {
+        "id": "governance_activity",
+        "name": "Recent Governance Activity",
+        "type": "table",
+        "query_id": "governance_events", 
+        "position": {"x": 0, "y": 13, "w": 12, "h": 4},
+        "config": {
+          "columns": [
+            {"field": "proposal_title", "name": "Proposal", "width": "30%"},
+            {"field": "governance_body", "name": "Body", "width": "15%"},
+            {"field": "total_votes", "name": "Votes", "width": "10%"},
+            {"field": "approval_percentage", "name": "Approval %", "width": "15%", "format": "percentage"},
+            {"field": "avg_voter_trust_score", "name": "Avg Trust", "width": "15%", "format": "decimal"},
+            {"field": "last_activity", "name": "Last Activity", "width": "15%", "format": "datetime"}
+          ],
+          "sort_by": "last_activity",
+          "sort_order": "desc",
+          "max_rows": 10,
+          "row_colors": {
+            "condition": "approval_percentage >= 80",
+            "true_color": "#F0FDF4",
+            "false_color": "#FEF2F2"
+          }
+        }
+      },
+      {
+        "id": "ciq_metrics_summary",
+        "name": "CIQ Metrics Summary",
+        "type": "gauge_chart",
+        "query_id": "trust_score_trends",
+        "position": {"x": 0, "y": 17, "w": 12, "h": 3},
+        "config": {
+          "gauges": [
+            {
+              "name": "Clarity Score",
+              "field": "avg_clarity_score",
+              "min": 0,
+              "max": 1,
+              "target": 0.8,
+              "color_ranges": [
+                {"min": 0, "max": 0.5, "color": "#EF4444"},
+                {"min": 0.5, "max": 0.7, "color": "#F59E0B"},
+                {"min": 0.7, "max": 0.9, "color": "#34D399"},
+                {"min": 0.9, "max": 1, "color": "#10B981"}
+              ]
+            },
+            {
+              "name": "Integrity Score", 
+              "field": "avg_integrity_score",
+              "min": 0,
+              "max": 1,
+              "target": 0.8,
+              "color_ranges": [
+                {"min": 0, "max": 0.5, "color": "#EF4444"},
+                {"min": 0.5, "max": 0.7, "color": "#F59E0B"},
+                {"min": 0.7, "max": 0.9, "color": "#34D399"},
+                {"min": 0.9, "max": 1, "color": "#10B981"}
+              ]
+            },
+            {
+              "name": "Quality Score",
+              "field": "avg_quality_score", 
+              "min": 0,
+              "max": 1,
+              "target": 0.8,
+              "color_ranges": [
+                {"min": 0, "max": 0.5, "color": "#EF4444"},
+                {"min": 0.5, "max": 0.7, "color": "#F59E0B"},
+                {"min": 0.7, "max": 0.9, "color": "#34D399"},
+                {"min": 0.9, "max": 1, "color": "#10B981"}
+              ]
+            }
+          ],
+          "layout": "horizontal"
+        }
+      }
+    ],
+    "refresh_schedule": {
+      "interval": "1h",
+      "timezone": "UTC"
+    },
+    "alerts": [
+      {
+        "name": "Low Average Trust Score",
+        "condition": "avg_trust_score < 0.7",
+        "query_id": "trust_score_trends",
+        "notification_channels": ["email", "slack"],
+        "severity": "warning"
+      },
+      {
+        "name": "Critical Trust Score Agents",
+        "condition": "low_trust_agents > 5",
+        "query_id": "trust_score_trends", 
+        "notification_channels": ["email", "slack", "webhook"],
+        "severity": "critical"
+      }
+    ]
+  }
+}

@@ -1,10 +1,37 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Shield, ExternalLink } from "lucide-react"
 
 export default function CommandCenterPage() {
+  const trustScore = 94.7
+
   return (
     <div className="p-6 space-y-6">
+      {/* Trust Score Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="text-green-400 border-green-400 px-3 py-1">
+            <Shield className="w-4 h-4 mr-2" />
+            Trust Score: {trustScore}%
+          </Badge>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-orange-500 border-orange-500 hover:bg-orange-500 hover:text-white"
+            onClick={() => window.open('https://dune.com/symbi/trust-protocol', '_blank')}
+          >
+            <ExternalLink className="w-3 h-3 mr-1" />
+            Verify on Dune
+          </Button>
+        </div>
+        <div className="text-xs text-neutral-500">
+          Verified by blockchain • Updated 2 min ago
+        </div>
+      </div>
+
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Agent Status Overview */}
