@@ -32,3 +32,13 @@ export {
   setGlobalResolver,
   resolveDID,
 } from './resolver';
+
+// Auto-configuration for streamlined DID method enablement
+export {
+  AutoDIDConfig,
+  createAutoConfiguredResolver,
+  createFullyEnabledResolver,
+  createResolverFromEnvironment,
+  getGlobalAutoResolver,
+  setGlobalAutoResolver,
+} from './auto-config';
