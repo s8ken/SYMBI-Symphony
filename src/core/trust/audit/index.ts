@@ -9,3 +9,5 @@
 
 export * from './types';
 export * from './logger';
+export * from './persistence';
+export * from './enhanced-logger';
