@@ -10,3 +10,5 @@
 export * from './types';
 export * from './bitstring';
 export * from './status-list';
+export * from './enhanced-status-list';
+export * from './memory-storage';

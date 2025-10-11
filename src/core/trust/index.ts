@@ -11,4 +11,5 @@ export * from './resolution';
 export * from './revocation';
 export * from './kms';
 export * from './audit';
+export * from './persistence';
 export * from './types';
