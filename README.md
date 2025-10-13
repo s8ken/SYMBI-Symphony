@@ -112,13 +112,13 @@ npm run test:coverage  # Generate coverage report
 ### Installation
 
 ```bash
-npm install @symbi/trust-protocol
+npm install @yseeku/trust-protocol
 ```
 
 ### DID Resolution
 
 ```typescript
-import { UniversalResolver } from '@symbi/trust-protocol';
+import { UniversalResolver } from '@yseeku/trust-protocol';
 
 const resolver = new UniversalResolver();
 const result = await resolver.resolve('did:web:example.com');
@@ -130,7 +130,7 @@ console.log(result.didDocument);
 ### Issue Trust Declaration
 
 ```typescript
-import { AgentFactory } from '@symbi/trust-protocol';
+import { AgentFactory } from '@yseeku/trust-protocol';
 
 const declaration = AgentFactory.createTrustDeclaration(
   'agent-123',
@@ -152,7 +152,7 @@ console.log(declaration.trust_level); // "MEDIUM"
 ### Check Revocation Status
 
 ```typescript
-import { verifyRemoteStatus } from '@symbi/trust-protocol';
+import { verifyRemoteStatus } from '@yseeku/trust-protocol';
 
 const statusEntry = {
   id: 'https://example.com/status/1#42',

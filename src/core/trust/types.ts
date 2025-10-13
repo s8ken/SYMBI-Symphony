@@ -3,6 +3,8 @@
  * Re-exports from agent types for cleaner imports
  */
 
+import type { TrustLevel } from '../agent/types';
+
 export type {
   TrustArticles,
   TrustScores,

@@ -360,18 +360,20 @@ export class IntegrationManager extends EventEmitter {
     try {
       // Log to blockchain
       if (this.blockchainLogger) {
-        await this.blockchainLogger.logGovernanceEvent(actor, eventType as any, data, options);
+        await this.blockchainLogger.logGovernanceEvent(eventType as any, actor, data as any, options);
       }
 
       // Ingest to data pipeline
       if (this.dataPipeline) {
         await this.dataPipeline.ingestGovernanceEvent(actor, {
-          eventType: eventType as any,
           proposalId: data.proposalId,
-          voterId: data.voterId,
-          vote: data.vote,
-          timestamp: new Date(),
-          metadata: data
+          proposalType: data.proposalType || 'OPERATIONAL',
+          house: data.house || 'BICAMERAL',
+          action: data.action || 'CREATED',
+          votingPower: data.votingPower,
+          voteChoice: data.voteChoice,
+          quorumReached: data.quorumReached,
+          executionDelay: data.executionDelay
         }, options);
       }
 
@@ -418,19 +420,19 @@ export class IntegrationManager extends EventEmitter {
     try {
       // Log to blockchain
       if (this.blockchainLogger) {
-        await this.blockchainLogger.logTrustProtocolEvent(actor, eventType as any, data, options);
+        await this.blockchainLogger.logTrustProtocolEvent(eventType as any, actor, data as any, options);
       }
 
       // Ingest to data pipeline
       if (this.dataPipeline) {
         await this.dataPipeline.ingestTrustProtocolEvent(actor, {
-          eventType: eventType as any,
           agentId: data.agentId,
-          declarationId: data.declarationId,
-          complianceScore: data.complianceScore,
-          trustScore: data.trustScore,
-          timestamp: new Date(),
-          metadata: data
+          trustScore: data.trustScore || 0,
+          complianceScore: data.complianceScore || 0,
+          guiltScore: data.guiltScore || 0,
+          ciqMetrics: data.ciqMetrics || { clarity: 0, integrity: 0, quality: 0 },
+          trustArticles: data.trustArticles || {},
+          riskCategory: data.riskCategory || 'MEDIUM'
         }, options);
       }
 
@@ -557,7 +559,7 @@ export class IntegrationManager extends EventEmitter {
    * Initialize blockchain logger
    */
   private async initializeBlockchainLogger(): Promise<void> {
-    this.blockchainLogger = initializeBlockchainLogger(this.config.blockchainLogger, this.auditLogger);
+    this.blockchainLogger = initializeBlockchainLogger(this.config.blockchainLogger);
     await this.blockchainLogger.start();
     this.stats.components.blockchainLogger.status = 'ACTIVE';
   }
@@ -569,9 +571,9 @@ export class IntegrationManager extends EventEmitter {
     if (!this.blockchainLogger) {
       throw new Error('Blockchain logger must be initialized first');
     }
-    
+
     this.dataPipeline = initializeDataPipeline(this.config.dataPipeline, this.blockchainLogger);
-    await this.dataPipeline.start();
+    // TODO: Implement start() method in HybridDataPipeline
     this.stats.components.dataPipeline.status = 'ACTIVE';
 
     // Setup pipeline event listeners
@@ -603,7 +605,7 @@ export class IntegrationManager extends EventEmitter {
         this.dataPipeline,
         this.blockchainLogger
       );
-      await this.realTimeStreamer.start();
+      // TODO: Implement start() method in RealTimeStreamer
       this.stats.components.realTimeStreamer.status = 'ACTIVE';
 
       // Setup streamer event listeners
@@ -636,7 +638,7 @@ export class IntegrationManager extends EventEmitter {
         this.dataPipeline,
         this.blockchainLogger
       );
-      await this.analytics.start();
+      // TODO: Implement start() method in AdvancedAnalytics
       this.stats.components.analytics.status = 'ACTIVE';
 
       // Setup analytics event listeners

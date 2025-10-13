@@ -11,6 +11,7 @@ import {
   DecryptOptions,
   KeyAlgorithm,
   KeyState,
+  KeyUsage,
 } from './types';
 
 /**
@@ -423,7 +424,7 @@ interface LocalKey {
   keyId: string;
   alias?: string;
   algorithm: KeyAlgorithm;
-  usage: string;
+  usage: KeyUsage;
   state: KeyState;
   createdAt: Date;
   rotatedAt?: Date;

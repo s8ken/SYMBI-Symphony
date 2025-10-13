@@ -31,7 +31,7 @@ export interface KeyMetadata {
   createdAt: Date;
   provider: 'aws' | 'gcp' | 'local';
   arn?: string; // AWS KMS
-  resourceName?: string; // GCP KMS
+  resourceName?: string | null; // GCP KMS (allows null from GCP library)
 }
 
 /**

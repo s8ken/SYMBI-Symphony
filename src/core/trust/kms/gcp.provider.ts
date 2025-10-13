@@ -71,9 +71,9 @@ export class GCPKMSProvider implements KMSProvider {
       parent: keyRingPath,
       cryptoKeyId: keyId,
       cryptoKey: {
-        purpose: this.mapKeyUsage(options.usage),
+        purpose: this.mapKeyUsage(options.usage) as any,
         versionTemplate: {
-          algorithm: this.mapKeyAlgorithm(options.algorithm, options.usage),
+          algorithm: this.mapKeyAlgorithm(options.algorithm, options.usage) as any,
         },
         labels: options.tags,
       },
@@ -112,9 +112,9 @@ export class GCPKMSProvider implements KMSProvider {
       : new Date();
 
     const algorithm = this.unmapAlgorithm(
-      key.versionTemplate?.algorithm || 'CRYPTO_KEY_VERSION_ALGORITHM_UNSPECIFIED'
+      String(key.versionTemplate?.algorithm || 'CRYPTO_KEY_VERSION_ALGORITHM_UNSPECIFIED')
     );
-    const usage = this.unmapPurpose(key.purpose || 'CRYPTO_KEY_PURPOSE_UNSPECIFIED');
+    const usage = this.unmapPurpose(String(key.purpose || 'CRYPTO_KEY_PURPOSE_UNSPECIFIED'));
 
     return {
       keyId,
@@ -140,9 +140,9 @@ export class GCPKMSProvider implements KMSProvider {
           : new Date();
 
         const algorithm = this.unmapAlgorithm(
-          key.versionTemplate?.algorithm || 'CRYPTO_KEY_VERSION_ALGORITHM_UNSPECIFIED'
+          String(key.versionTemplate?.algorithm || 'CRYPTO_KEY_VERSION_ALGORITHM_UNSPECIFIED')
         );
-        const usage = this.unmapPurpose(key.purpose || 'CRYPTO_KEY_PURPOSE_UNSPECIFIED');
+        const usage = this.unmapPurpose(String(key.purpose || 'CRYPTO_KEY_PURPOSE_UNSPECIFIED'));
 
         return {
           keyId,

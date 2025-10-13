@@ -338,13 +338,28 @@ export class BlockchainLogger {
     totalEventTypes: string[];
     isFlushTimerActive: boolean;
     config: BlockchainLoggerConfig;
+    errorCount: number;
+    eventsLogged: number;
+    lastLogTimestamp?: Date;
   } {
     return {
       queuedEvents: this.eventQueue.length,
       totalEventTypes: [...new Set(this.eventQueue.map(e => e.eventType))],
       isFlushTimerActive: !!this.flushTimer,
-      config: this.config
+      config: this.config,
+      errorCount: 0, // TODO: implement error tracking
+      eventsLogged: 0, // TODO: implement event counter
+      lastLogTimestamp: undefined // TODO: track last log time
     };
+  }
+
+  /**
+   * Start the blockchain logger (compatibility method)
+   */
+  async start(): Promise<void> {
+    if (!this.flushTimer && this.config.enabled && this.config.flushInterval > 0) {
+      this.startFlushTimer();
+    }
   }
 
   /**

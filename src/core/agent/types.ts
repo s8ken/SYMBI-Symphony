@@ -80,9 +80,13 @@ export interface CredentialProof {
 export interface DIDDocument {
   '@context': string[];
   id: string;
+  controller?: string;
   verificationMethod: VerificationMethod[];
   authentication: string[];
   assertionMethod: string[];
+  keyAgreement?: string[];
+  capabilityInvocation?: string[];
+  capabilityDelegation?: string[];
   service?: ServiceEndpoint[];
 }
 
@@ -92,6 +96,7 @@ export interface VerificationMethod {
   controller: string;
   publicKeyMultibase?: string;
   publicKeyJwk?: any;
+  blockchainAccountId?: string;
 }
 
 export interface ServiceEndpoint {

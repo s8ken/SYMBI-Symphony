@@ -349,5 +349,5 @@ async function defaultFetch(url: string): Promise<StatusList2021Credential> {
     throw new Error(`Failed to fetch status list: HTTP ${response.status}`);
   }
 
-  return response.json();
+  return response.json() as Promise<StatusList2021Credential>;
 }

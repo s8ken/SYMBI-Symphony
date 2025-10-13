@@ -226,11 +226,11 @@ export class DidIonResolver implements DIDResolver {
       }
 
       // Parse response (W3C DID Resolution format)
-      const resolutionResult = await response.json();
+      const resolutionResult = await response.json() as any;
 
       // Extract DID document and metadata
-      const didDocument = resolutionResult.didDocument || null;
-      const didDocumentMetadata = resolutionResult.didDocumentMetadata || {};
+      const didDocument = (resolutionResult.didDocument as DIDDocument) || null;
+      const didDocumentMetadata = (resolutionResult.didDocumentMetadata as DIDDocumentMetadata) || {};
 
       // Validate DID document if present
       if (didDocument) {

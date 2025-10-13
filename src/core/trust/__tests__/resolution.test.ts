@@ -323,6 +323,7 @@ describe('Resolution Metadata', () => {
         id: did,
         verificationMethod: [],
         authentication: [],
+        assertionMethod: [],
       },
       metadata: {},
       timestamp: Date.now(),

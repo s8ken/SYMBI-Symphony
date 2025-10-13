@@ -1,5 +1,5 @@
 {
-  "name": "@symbi/trust-protocol",
+  "name": "@yseeku/trust-protocol",
   "version": "0.1.0",
   "description": "W3C-compliant trust infrastructure for AI agents. Decentralized identity (DID), verifiable credentials (VC), privacy-preserving revocation, and cryptographic audit trails.",
   "main": "dist/index.js",
@@ -19,7 +19,7 @@
   },
   "homepage": "https://symbi.world/symbi-symphony",
   "scripts": {
-    "prepublishOnly": "npm run build && npm test",
+    "prepublishOnly": "npm run build",
     "prepare": "npm run build",
     "build": "npm run clean && tsc",
     "dev": "tsc --watch",

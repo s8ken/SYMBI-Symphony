@@ -1,5 +1,5 @@
-import { DIDDocument, DIDDocumentMetadata } from '../types';
-import { CacheEntry } from './types';
+import { DIDDocument } from '../types';
+import { CacheEntry, DIDDocumentMetadata } from './types';
 
 /**
  * Abstract cache interface for DID resolution

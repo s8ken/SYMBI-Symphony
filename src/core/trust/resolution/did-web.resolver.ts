@@ -131,7 +131,7 @@ export class DidWebResolver implements DIDResolver {
 
       // Parse DID document
       const contentType = response.headers.get('Content-Type') || '';
-      const didDocument = await response.json();
+      const didDocument = await response.json() as DIDDocument;
 
       // Validate DID document
       const validation = this.validateDidDocument(didDocument, did);
@@ -176,8 +176,9 @@ export class DidWebResolver implements DIDResolver {
     } catch (error: any) {
       // Handle network errors
       if (error.name === 'AbortError') {
+        const requestTimeout = options?.timeout || this.httpTimeout;
         resolutionMetadata.error = 'timeout';
-        resolutionMetadata.message = `Resolution timeout after ${timeout}ms`;
+        resolutionMetadata.message = `Resolution timeout after ${requestTimeout}ms`;
       } else {
         // Try offline fallback
         if (options?.fallbackToCache && this.cache) {

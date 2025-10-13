@@ -229,24 +229,25 @@ export class DidKeyResolver implements DIDResolver {
       verificationMethod: [verificationMethod],
       authentication: [],
       assertionMethod: [],
-      keyAgreement: [],
-      capabilityInvocation: [],
-      capabilityDelegation: [],
     };
 
     // Add key to appropriate verification relationships
     for (const relationship of verificationRelationships) {
-      if (relationship in didDocument) {
-        (didDocument as any)[relationship].push(keyId);
+      if (relationship === 'authentication') {
+        didDocument.authentication.push(keyId);
+      } else if (relationship === 'assertionMethod') {
+        didDocument.assertionMethod.push(keyId);
+      } else if (relationship === 'keyAgreement') {
+        if (!didDocument.keyAgreement) didDocument.keyAgreement = [];
+        didDocument.keyAgreement.push(keyId);
+      } else if (relationship === 'capabilityInvocation') {
+        if (!didDocument.capabilityInvocation) didDocument.capabilityInvocation = [];
+        didDocument.capabilityInvocation.push(keyId);
+      } else if (relationship === 'capabilityDelegation') {
+        if (!didDocument.capabilityDelegation) didDocument.capabilityDelegation = [];
+        didDocument.capabilityDelegation.push(keyId);
       }
     }
-
-    // Clean up empty arrays
-    if (didDocument.authentication?.length === 0) delete didDocument.authentication;
-    if (didDocument.assertionMethod?.length === 0) delete didDocument.assertionMethod;
-    if (didDocument.keyAgreement?.length === 0) delete didDocument.keyAgreement;
-    if (didDocument.capabilityInvocation?.length === 0) delete didDocument.capabilityInvocation;
-    if (didDocument.capabilityDelegation?.length === 0) delete didDocument.capabilityDelegation;
 
     return didDocument;
   }
