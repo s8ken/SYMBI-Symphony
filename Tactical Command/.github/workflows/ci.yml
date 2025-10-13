@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Frontend tests
+  frontend-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+    
+    - name: Run frontend tests
+      run: npm test
+    
+    - name: Run Playwright tests
+      run: npm run test:e2e
+      env:
+        CI: true
+
+  # uAgents Python tests
+  uagents-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    
+    - name: Cache Poetry dependencies
+      uses: actions/cache@v3
+      with:
+        path: uAgents/python/.venv
+        key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('uAgents/python/poetry.lock') }}
+        restore-keys: |
+          venv-${{ runner.os }}-${{ matrix.python-version }}-
+    
+    - name: Install dependencies
+      working-directory: uAgents/python
+      run: |
+        poetry install --no-interaction --no-root
+        poetry install --no-interaction
+    
+    - name: Run uAgents tests with timeout
+      working-directory: uAgents/python
+      run: |
+        poetry run coverage run -m pytest \
+          --timeout=300 \
+          --timeout-method=thread \
+          -v \
+          --tb=short \
+          --maxfail=5
+      env:
+        COVERAGE_FILE: ".coverage.${{ runner.os }}.${{ matrix.python-version }}"
+      timeout-minutes: 10
+    
+    - name: Generate coverage report
+      working-directory: uAgents/python
+      run: |
+        poetry run coverage report --show-missing
+        poetry run coverage xml
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: uAgents/python/coverage.xml
+        flags: uagents
+        name: uagents-${{ matrix.python-version }}
+        fail_ci_if_error: false
+
+  # Build and deployment check
+  build-check:
+    runs-on: ubuntu-latest
+    needs: [frontend-tests, uagents-tests]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+    
+    - name: Build application
+      run: npm run build
+      env:
+        CI: true
+        NODE_ENV: production

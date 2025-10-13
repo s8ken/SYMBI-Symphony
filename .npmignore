@@ -1,0 +1,77 @@
+# Source files (only publish dist/)
+src/
+*.ts
+!*.d.ts
+
+# Tests
+__tests__/
+*.test.ts
+*.spec.ts
+test/
+tests/
+coverage/
+.nyc_output/
+jest.config.js
+jest.setup.js
+
+# Build tools
+tsconfig.json
+tsconfig.*.json
+.eslintrc.json
+.prettierrc
+.editorconfig
+
+# Development
+node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+
+# Documentation (keep README.md)
+docs/
+*.md
+!README.md
+!LICENSE
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project-specific
+Tactical Command/
+SYMBI RESONATE/
+trust-protocol-1/
+website-materials/
+examples/
+scripts/
+*.archived
+SYMBI-SYNERGY-*
+DAY_*.md
+OCTOBER_NOVEMBER_LAUNCH_PLAN.md
+IMPLEMENTATION_ROADMAP.md
+TRUST_FRAMEWORK.md
+DAO_GOVERNANCE_ALIGNMENT.md
+
+# E2E tests
+e2e/
+playwright.config.ts
+playwright-report/
+test-results/
+
+# Misc
+*.tgz
+.npm/
+.cache/
+tmp/
+temp/

@@ -1,11 +1,27 @@
 {
-  "name": "symbi-symphony-remote",
-  "version": "1.0.0",
-  "description": "SYMBI Symphony Remote - Comprehensive AI Agent Ecosystem",
+  "name": "@symbi/trust-protocol",
+  "version": "0.1.0",
+  "description": "W3C-compliant trust infrastructure for AI agents. Decentralized identity (DID), verifiable credentials (VC), privacy-preserving revocation, and cryptographic audit trails.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "module": "dist/index.mjs",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/s8ken/SYMBI-Symphony.git"
+  },
+  "bugs": {
+    "url": "https://github.com/s8ken/SYMBI-Symphony/issues"
+  },
+  "homepage": "https://symbi.world/symbi-symphony",
   "scripts": {
-    "build": "tsc",
+    "prepublishOnly": "npm run build && npm test",
+    "prepare": "npm run build",
+    "build": "npm run clean && tsc",
     "dev": "tsc --watch",
     "test": "jest",
     "test:trust": "jest --testPathPattern=trust --coverage",
@@ -26,15 +42,30 @@
   },
   "keywords": [
     "ai",
+    "artificial-intelligence",
     "agents",
+    "trust",
+    "decentralized-identity",
+    "did",
+    "verifiable-credentials",
+    "w3c",
+    "revocation",
+    "audit-trail",
+    "cryptography",
+    "eu-ai-act",
+    "compliance",
     "symbi",
-    "symphony",
-    "monitoring",
-    "authentication",
-    "distributed-systems"
+    "symphony"
   ],
-  "author": "SYMBI Team",
+  "author": "SYMBI Team <stephen@yseeku.com>",
   "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "devDependencies": {
     "@types/jest": "^29.0.0",
     "@types/node": "^20.0.0",

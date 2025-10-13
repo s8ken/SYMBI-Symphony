@@ -1,258 +1,65 @@
-# Contributing to SYMBI Ecosystem Hub
+# Contributing to SYMBI Symphony
 
-Thank you for your interest in contributing to the SYMBI ecosystem! This document provides guidelines for contributing to the Gammatria site and the broader SYMBI project.
+Thank you for your interest in contributing to SYMBI Symphony! We welcome contributions from the community and are excited to work with you.
 
-## 🌟 Ways to Contribute
+## Code of Conduct
 
-### Code Contributions
-- Bug fixes and improvements
-- New features and enhancements
-- Performance optimizations
-- Documentation improvements
-- Test coverage expansion
+By participating in this project, you agree to abide by our [Code of Conduct](./CODE_OF_CONDUCT.md). Please read it before contributing.
 
-### Research Contributions
-- Academic papers and studies
-- Verification tests and benchmarks
-- Case studies and use cases
-- Integration examples
+## Ways to Contribute
 
-### Community Contributions
-- Issue reporting and triage
-- Community support and discussions
-- Translation and localization
-- Educational content creation
+### 🐛 Bug Reports
 
-## 🚀 Getting Started
+Found a bug? Please [open an issue](https://github.com/s8ken/SYMBI-Symphony/issues/new?template=bug_report.md) with:
+- Clear description of the issue
+- Steps to reproduce
+- Expected vs actual behavior
+- Environment details (Node version, OS, etc.)
+- Relevant logs or error messages
 
-### Prerequisites
+### ✨ Feature Requests
 
-- Node.js 18+ and npm
-- Git knowledge
-- TypeScript/React experience (for code contributions)
-- Understanding of SYMBI concepts (see [/getting-started](https://gammatria.site/getting-started))
+Have an idea? [Request a feature](https://github.com/s8ken/SYMBI-Symphony/issues/new?template=feature_request.md) with:
+- Clear description of the feature
+- Use case and motivation
+- Proposed implementation (optional)
+- Any alternatives you've considered
 
-### Development Setup
+### 📖 Documentation
 
-1. **Fork and Clone**
-   ```bash
-   git clone https://github.com/your-username/gammatria-site.git
-   cd gammatria-site
-   ```
+Documentation improvements are always welcome:
+- Fix typos or unclear explanations
+- Add code examples
+- Improve API documentation
+- Write tutorials or guides
 
-2. **Install Dependencies**
-   ```bash
-   npm install
-   ```
+## Development Setup
 
-3. **Start Development Server**
-   ```bash
-   npm run dev
-   ```
+1. **Fork the repository**
+2. **Clone your fork**: `git clone https://github.com/YOUR_USERNAME/SYMBI-Symphony.git`
+3. **Install dependencies**: `npm install`
+4. **Create a branch**: `git checkout -b feature/your-feature-name`
 
-4. **Run Tests and Linting**
-   ```bash
-   npm run lint
-   npm run build  # Ensure build succeeds
-   ```
+## Pull Request Process
 
-## 📋 Contribution Process
+1. Ensure tests pass: `npm test`
+2. Maintain 95%+ coverage: `npm run test:coverage`
+3. Follow TypeScript strict mode
+4. Use Conventional Commits format
+5. Update documentation as needed
 
-### 1. Issue First
-- Check existing issues before creating new ones
-- Use issue templates when available
-- Provide clear reproduction steps for bugs
-- Include relevant context and screenshots
+## Code Standards
 
-### 2. Branch Strategy
-```bash
-# Create feature branch from main
-git checkout -b feature/your-feature-name
+- TypeScript strict mode enabled
+- 95%+ test coverage required
+- ESLint + Prettier for formatting
+- Conventional commits
+- JSDoc comments for public APIs
 
-# Or for bug fixes
-git checkout -b fix/issue-description
-```
+## Questions?
 
-### 3. Code Standards
+- 💬 [GitHub Discussions](https://github.com/s8ken/SYMBI-Symphony/discussions)
+- 🐛 [Issue Tracker](https://github.com/s8ken/SYMBI-Symphony/issues)
+- 📧 Email: stephen@yseeku.com
 
-#### TypeScript/React Guidelines
-- Use TypeScript for all new code
-- Follow existing component patterns
-- Implement proper error boundaries
-- Ensure accessibility (WCAG 2.1 AA)
-- Use semantic HTML elements
-
-#### Styling Guidelines
-- Use Tailwind CSS classes
-- Follow existing design system patterns
-- Ensure responsive design (mobile-first)
-- Test in multiple browsers
-- Maintain dark theme consistency
-
-#### Performance Guidelines
-- Optimize images and assets
-- Implement proper loading states
-- Use Next.js best practices
-- Minimize bundle size impact
-- Test Core Web Vitals
-
-### 4. Testing Requirements
-
-#### Before Submitting
-- [ ] Code builds without errors
-- [ ] Linting passes (`npm run lint`)
-- [ ] Manual testing in development
-- [ ] Cross-browser compatibility check
-- [ ] Mobile responsiveness verified
-- [ ] Accessibility tested
-
-#### Testing Checklist
-- Interactive components work correctly
-- Navigation functions properly
-- Forms validate and submit
-- External links open correctly
-- Analytics consent works
-- Error states display properly
-
-### 5. Pull Request Process
-
-#### PR Title Format
-```
-type(scope): description
-
-Examples:
-feat(showcase): add interactive AgentVerse demo
-fix(consent): resolve hydration mismatch
-docs(api): update authentication examples
-```
-
-#### PR Description Template
-```markdown
-## Description
-Brief description of changes
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Documentation update
-- [ ] Performance improvement
-- [ ] Refactoring
-
-## Testing
-- [ ] Manual testing completed
-- [ ] Cross-browser tested
-- [ ] Mobile responsive
-- [ ] Accessibility verified
-
-## Screenshots
-(If applicable)
-
-## Related Issues
-Closes #123
-```
-
-#### Review Process
-1. Automated checks must pass
-2. At least one maintainer review required
-3. Address feedback promptly
-4. Squash commits before merge
-
-## 🎯 Specific Contribution Areas
-
-### Documentation
-- API documentation improvements
-- Getting started guide enhancements
-- Code examples and tutorials
-- Research paper summaries
-
-### Interactive Demos
-- New SYMBI module showcases
-- Enhanced /proof toggle features
-- Integration workflow examples
-- Performance benchmarking tools
-
-### Research Integration
-- Academic paper implementations
-- Verification test additions
-- Case study documentation
-- Benchmark result displays
-
-### Accessibility & UX
-- Screen reader compatibility
-- Keyboard navigation improvements
-- Color contrast enhancements
-- Mobile experience optimization
-
-## 🔧 Technical Architecture
-
-### Key Technologies
-- **Next.js 15.5.4** - App Router with TypeScript
-- **Tailwind CSS** - Utility-first styling
-- **React 18** - Component architecture
-- **Vercel** - Deployment platform
-
-### Project Structure
-```
-src/
-├── app/                    # Next.js pages (App Router)
-├── components/             # Reusable UI components
-├── lib/                   # Utility functions
-├── styles/                # Global styles
-└── types/                 # TypeScript definitions
-```
-
-### Component Guidelines
-- Use functional components with hooks
-- Implement proper TypeScript interfaces
-- Include JSDoc comments for complex logic
-- Export components with clear naming
-- Handle loading and error states
-
-## 🌍 Community Guidelines
-
-### Code of Conduct
-- Be respectful and inclusive
-- Provide constructive feedback
-- Help newcomers learn
-- Focus on technical merit
-- Maintain professional communication
-
-### Communication Channels
-- **GitHub Issues** - Bug reports and feature requests
-- **GitHub Discussions** - Community questions and ideas
-- **Pull Requests** - Code review and collaboration
-
-## 📚 Resources
-
-### SYMBI Ecosystem
-- [Ecosystem Overview](https://gammatria.site/ecosystem)
-- [API Documentation](https://gammatria.site/api-docs)
-- [Research Papers](https://gammatria.site/research)
-- [Getting Started Guide](https://gammatria.site/getting-started)
-
-### Development Resources
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Tailwind CSS Guide](https://tailwindcss.com/docs)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs)
-- [React Documentation](https://react.dev)
-
-## 🏆 Recognition
-
-Contributors are recognized through:
-- GitHub contributor graphs
-- Release notes mentions
-- Community showcase features
-- Academic paper acknowledgments
-
-## 📄 License
-
-By contributing, you agree that your contributions will be licensed under:
-- **Code**: MIT License
-- **Documentation**: CC BY-NC-SA 4.0
-- **Research**: Academic use with proper attribution
-
----
-
-**Questions?** Open a [GitHub Discussion](https://github.com/your-org/gammatria-site/discussions) or reach out to the maintainers.
-
-Thank you for helping advance trustworthy AI through the SYMBI ecosystem! 🚀
+Thank you for contributing! 🛡️
