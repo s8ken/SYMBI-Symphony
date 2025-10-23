@@ -1,0 +1,28 @@
+{
+  "nextIndex": 3,
+  "revocationRecords": [
+    [
+      1,
+      {
+        "credentialId": "credential-demo-final-list-1",
+        "statusListIndex": 1,
+        "revokedAt": "2025-10-23T10:03:28.762Z",
+        "revokedBy": "did:example:symbi-issuer",
+        "reason": "Final demo revocation",
+        "statusListCredential": "https://symbi.example.com/status/demo-final-list"
+      }
+    ]
+  ],
+  "metadata": {
+    "id": "demo-final-list",
+    "issuer": "did:example:symbi-issuer",
+    "statusPurpose": "revocation",
+    "length": 8192,
+    "issued": "2025-10-23T10:03:28.760Z",
+    "totalRevoked": 1,
+    "totalSuspended": 0
+  },
+  "bitstring": "H4sIAAAAAAAAA2NiGAWjYBSMVAAAsUvnxQAEAAA",
+  "lastPersisted": "2025-10-23T10:03:28.762Z",
+  "isDirty": false
+}

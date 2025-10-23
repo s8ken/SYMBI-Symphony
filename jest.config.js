@@ -75,7 +75,8 @@ module.exports = {
 
   // Transform ignore patterns
   transformIgnorePatterns: [
-    '/node_modules/(?!(some-esm-package)/)'
+    '/node_modules/(?!(some-esm-package)/)',
+    'node_modules/(?!(.*?@noble)/)'
   ],
 
   // Error on deprecated APIs
