@@ -9,6 +9,7 @@ import OperationsPage from "./operations/page"
 import IntelligencePage from "./intelligence/page"
 import SystemsPage from "./systems/page"
 import GovernancePage from "./governance/page"
+import TrustDashboardPage from "./trust/page"
 
 export default function TacticalDashboard() {
   const [activeSection, setActiveSection] = useState("overview")
@@ -46,6 +47,7 @@ export default function TacticalDashboard() {
               { id: "intelligence", icon: Shield, label: "INTELLIGENCE" },
               { id: "governance", icon: Scale, label: "GOVERNANCE" },
               { id: "systems", icon: Settings, label: "SYSTEMS" },
+              { id: "trust", icon: Shield, label: "TRUST DASHBOARD" },
             ].map((item) => (
               <button
                 key={item.id}
@@ -111,6 +113,7 @@ export default function TacticalDashboard() {
           {activeSection === "intelligence" && <IntelligencePage />}
           {activeSection === "governance" && <GovernancePage />}
           {activeSection === "systems" && <SystemsPage />}
+          {activeSection === "trust" && <TrustDashboardPage />}
         </div>
       </div>
     </div>
