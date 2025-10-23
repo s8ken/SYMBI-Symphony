@@ -6,39 +6,60 @@ import {
   DIDResolutionMetadata,
   DIDDocumentMetadata,
 } from './types';
-import { ResolverCache } from './cache';
+import { InMemoryCache } from './cache';
 
 /**
  * did:web DID Method Resolver
  *
  * Spec: https://w3c-ccg.github.io/did-method-web/
  *
- * Resolution rules:
+ * The did:web method enables discovery of DID documents hosted on
+ * web servers using HTTPS. It provides a simple mapping from a
+ * domain name to a DID document.
+ *
+ * Format: did:web:<domain>:<path>
+ * Examples:
+ * - did:web:example.com
+ * - did:web:example.com:user:alice
+ * - did:web:example.com%3A8443 (with port)
+ *
+ * Resolution:
  * - did:web:example.com -> https://example.com/.well-known/did.json
  * - did:web:example.com:user:alice -> https://example.com/user/alice/did.json
- * - did:web:example.com%3A8080:user:alice -> https://example.com:8080/user/alice/did.json
- *
- * Features:
- * - HTTPS-only resolution (HTTP upgrade)
- * - .well-known/did.json for domain root
- * - Path-based resolution for sub-resources
- * - Port specification with %3A encoding
- * - Offline fallback to cache
  */
 export class DidWebResolver implements DIDResolver {
   readonly method = 'web';
-  private cache?: ResolverCache;
-  private httpTimeout: number;
+  private readonly httpTimeout: number;
+  private readonly cache?: import('./cache').ResolverCache;
 
-  constructor(cache?: ResolverCache, httpTimeout: number = 5000) {
+  constructor(cache?: import('./cache').ResolverCache, httpTimeout: number = 5000) {
     this.cache = cache;
     this.httpTimeout = httpTimeout;
   }
 
   validateDID(did: string): boolean {
-    // did:web:<domain>:<path>*
-    const pattern = /^did:web:[a-zA-Z0-9._%-]+(:[a-zA-Z0-9._%-]+)*$/;
-    return pattern.test(did);
+    // Basic format: did:web:<domain-and-optional-path>
+    const pattern = /^did:web:[^\s]+$/;
+    if (!pattern.test(did)) {
+      return false;
+    }
+
+    // Extract domain part (after did:web:)
+    const domainPart = did.substring(8); // Remove 'did:web:'
+    
+    // Should not be empty
+    if (!domainPart) {
+      return false;
+    }
+
+    // Should not contain invalid characters for domains
+    // Basic check - should not contain slashes except as path separators
+    // and should not end with a slash
+    if (domainPart.endsWith('/')) {
+      return false;
+    }
+
+    return true;
   }
 
   async resolve(
@@ -198,21 +219,23 @@ export class DidWebResolver implements DIDResolver {
 
         // DNS failures should be treated as notFound (domain doesn't exist)
         // Check for common DNS error codes and messages
+        // Handle both direct errors and errors with causes (e.g., fetch failures)
+        const errorCode = error.code || (error.cause && error.cause.code);
+        const errorMessage = error.message || (error.cause && error.cause.message) || '';
+        
         const isDnsFailure =
-          error.code === 'ENOTFOUND' ||
-          error.code === 'EAI_AGAIN' ||
-          (error.message && (
-            error.message.includes('getaddrinfo') ||
-            error.message.includes('ENOTFOUND') ||
-            error.message.includes('DNS')
-          ));
+          errorCode === 'ENOTFOUND' ||
+          errorCode === 'EAI_AGAIN' ||
+          errorMessage.includes('getaddrinfo') ||
+          errorMessage.includes('ENOTFOUND') ||
+          errorMessage.includes('DNS');
 
         if (isDnsFailure) {
           resolutionMetadata.error = 'notFound';
-          resolutionMetadata.message = `Domain not found: ${error.message || 'DNS lookup failed'}`;
+          resolutionMetadata.message = `Domain not found: ${errorMessage || 'DNS lookup failed'}`;
         } else {
           resolutionMetadata.error = 'networkError';
-          resolutionMetadata.message = error.message || 'Network request failed';
+          resolutionMetadata.message = errorMessage || 'Network request failed';
         }
       }
 
@@ -226,30 +249,57 @@ export class DidWebResolver implements DIDResolver {
   }
 
   /**
-   * Convert did:web DID to HTTPS URL
+   * Convert DID to HTTPS URL
    *
    * Examples:
    * - did:web:example.com -> https://example.com/.well-known/did.json
    * - did:web:example.com:user:alice -> https://example.com/user/alice/did.json
-   * - did:web:example.com%3A8080 -> https://example.com:8080/.well-known/did.json
+   * - did:web:example.com%3A8443 -> https://example.com:8443/.well-known/did.json
    */
   private didToUrl(did: string): string {
-    // Remove did:web: prefix
-    const parts = did.replace('did:web:', '').split(':');
+    // Remove 'did:web:' prefix
+    let path = did.substring(8);
 
-    // First part is domain (may contain %3A for port)
-    const domain = parts[0].replace(/%3A/g, ':');
+    // Handle port encoding (%3A = URL encoded colon)
+    path = path.replace(/%3A/g, ':');
 
-    // Remaining parts are path
-    const path = parts.slice(1);
-
-    if (path.length === 0) {
-      // Root domain: use .well-known
-      return `https://${domain}/.well-known/did.json`;
-    } else {
-      // Sub-resource: use path-based resolution
-      return `https://${domain}/${path.join('/')}/did.json`;
+    // Split the entire path by colons
+    const parts = path.split(':');
+    
+    // The first part is always the domain
+    // Check if the second part is a port (numeric) or a path component
+    let host = parts[0];
+    let port = '';
+    let pathParts: string[] = [];
+    
+    if (parts.length > 1) {
+      // Check if the second part is all numeric (port) or has non-numeric characters (path)
+      if (/^\d+$/.test(parts[1])) {
+        // It's a port
+        port = parts[1];
+        pathParts = parts.slice(2);
+      } else {
+        // It's a path component
+        pathParts = parts.slice(1);
+      }
     }
+
+    // Construct the URL
+    let url = 'https://';
+    url += host;
+    if (port) {
+      url += ':' + port;
+    }
+
+    if (pathParts.length > 0) {
+      // Path-based DID
+      url += '/' + pathParts.join('/') + '/did.json';
+    } else {
+      // Root domain DID
+      url += '/.well-known/did.json';
+    }
+
+    return url;
   }
 
   /**
@@ -284,10 +334,7 @@ export class DidWebResolver implements DIDResolver {
       : [didDocument['@context']];
 
     if (!contexts.includes('https://www.w3.org/ns/did/v1')) {
-      return {
-        valid: false,
-        error: 'DID document @context must include https://www.w3.org/ns/did/v1',
-      };
+      return { valid: false, error: 'DID document @context must include https://www.w3.org/ns/did/v1' };
     }
 
     return { valid: true };

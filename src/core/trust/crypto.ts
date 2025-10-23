@@ -8,8 +8,7 @@
 import * as ed25519 from '@noble/ed25519';
 import * as secp256k1 from '@noble/secp256k1';
 import { canonicalize } from 'json-canonicalize';
-import { sha256 } from '@noble/hashes/sha2';
-import { sha512 } from '@noble/hashes/sha2';
+import { sha256, sha512 } from '@noble/hashes/sha2.js';
 
 export type SignatureAlgorithm = 'Ed25519' | 'ES256K' | 'RS256';
 

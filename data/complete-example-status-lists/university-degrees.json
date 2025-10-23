@@ -1,0 +1,28 @@
+{
+  "nextIndex": 3,
+  "revocationRecords": [
+    [
+      1,
+      {
+        "credentialId": "credential-university-degrees-1",
+        "statusListIndex": 1,
+        "revokedAt": "2025-10-23T10:02:27.000Z",
+        "revokedBy": "did:example:issuer123",
+        "reason": "Academic misconduct violation",
+        "statusListCredential": "https://example.com/status/university-degrees"
+      }
+    ]
+  ],
+  "metadata": {
+    "id": "university-degrees",
+    "issuer": "did:example:issuer123",
+    "statusPurpose": "revocation",
+    "length": 131072,
+    "issued": "2025-10-23T10:02:26.997Z",
+    "totalRevoked": 1,
+    "totalSuspended": 0
+  },
+  "bitstring": "H4sIAAAAAAAAA-3BMQ0AAAACIGf_0MbwARoAAAAAAAAAAAAAAAAAAADgbbmHB0sAQAAA",
+  "lastPersisted": "2025-10-23T10:02:26.998Z",
+  "isDirty": false
+}

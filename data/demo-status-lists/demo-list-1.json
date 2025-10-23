@@ -1,0 +1,28 @@
+{
+  "nextIndex": 3,
+  "revocationRecords": [
+    [
+      1,
+      {
+        "credentialId": "credential-demo-list-1-1",
+        "statusListIndex": 1,
+        "revokedAt": "2025-10-23T10:01:58.756Z",
+        "revokedBy": "did:example:revoker",
+        "reason": "Demo revocation reason",
+        "statusListCredential": "https://demo.example.com/status/demo-list-1"
+      }
+    ]
+  ],
+  "metadata": {
+    "id": "demo-list-1",
+    "issuer": "did:example:demo-issuer",
+    "statusPurpose": "revocation",
+    "length": 1024,
+    "issued": "2025-10-23T10:01:58.754Z",
+    "totalRevoked": 1,
+    "totalSuspended": 0
+  },
+  "bitstring": "H4sIAAAAAAAAA2NiGFgAAPsQV6WAAAAA",
+  "lastPersisted": "2025-10-23T10:01:58.755Z",
+  "isDirty": false
+}

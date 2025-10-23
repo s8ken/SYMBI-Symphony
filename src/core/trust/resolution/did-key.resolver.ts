@@ -150,32 +150,42 @@ export class DidKeyResolver implements DIDResolver {
       }
     }
 
-    // The result is in little-endian, reverse to get big-endian
+    // Reverse to get big-endian order
+    bytes.reverse();
+
+    // Prepend leading zeros
     const result = new Uint8Array(leadingZeros + bytes.length);
-    // Leading zeros stay as zeros (already initialized)
-    // Copy reversed bytes after leading zeros
+    for (let i = 0; i < leadingZeros; i++) {
+      result[i] = 0;
+    }
     for (let i = 0; i < bytes.length; i++) {
-      result[leadingZeros + i] = bytes[bytes.length - 1 - i];
+      result[leadingZeros + i] = bytes[i];
     }
 
     return result;
   }
 
   /**
-   * Parse multicodec varint prefix and extract key bytes
+   * Parse multicodec prefix from varint-encoded data
+   *
+   * Supports 1-2 byte varints as used in multicodec
    */
   private parseMulticodec(data: Uint8Array): { codec: number; keyBytes: Uint8Array } {
-    // Simple varint parsing (supports up to 2 bytes)
+    // Proper varint parsing (supports up to 2 bytes for common cases)
     let codec: number;
     let offset: number;
 
-    if (data[0] < 0x80) {
+    if ((data[0] & 0x80) === 0) {
       // Single byte varint
       codec = data[0];
       offset = 1;
     } else if (data.length >= 2) {
       // Two byte varint
-      codec = ((data[0] & 0x7f) | (data[1] << 7));
+      // For multicodec 0xed01:
+      // First byte: 0xed (11101101) - MSB set means continuation
+      // Second byte: 0x01 (00000001) - MSB clear means end
+      // The actual value is the two bytes combined as big-endian: 0xed01 = 60673
+      codec = (data[0] << 8) | data[1];
       offset = 2;
     } else {
       throw new Error('Invalid multicodec prefix');
@@ -186,7 +196,7 @@ export class DidKeyResolver implements DIDResolver {
   }
 
   /**
-   * Generate DID document from key material
+   * Generate DID document from parsed multicodec data
    */
   private generateDidDocument(
     did: string,
@@ -194,23 +204,44 @@ export class DidKeyResolver implements DIDResolver {
     keyBytes: Uint8Array,
     multibaseString: string
   ): DIDDocument {
+    // Key ID (fragment identifier for the verification method)
     const keyId = `${did}#${multibaseString}`;
 
+    // Determine key type and verification relationships based on multicodec
     let keyType: string;
     let verificationRelationships: string[];
 
     switch (codec) {
       case this.MULTICODEC.ED25519_PUB:
+        if (keyBytes.length !== 32) {
+          throw new Error('Ed25519 public key must be 32 bytes');
+        }
         keyType = 'Ed25519VerificationKey2020';
-        verificationRelationships = ['authentication', 'assertionMethod', 'capabilityDelegation', 'capabilityInvocation'];
+        verificationRelationships = [
+          'authentication',
+          'assertionMethod',
+          'capabilityDelegation',
+          'capabilityInvocation',
+        ];
         break;
 
       case this.MULTICODEC.SECP256K1_PUB:
+        if (keyBytes.length !== 33 && keyBytes.length !== 65) {
+          throw new Error('secp256k1 public key must be 33 or 65 bytes (compressed or uncompressed)');
+        }
         keyType = 'EcdsaSecp256k1VerificationKey2019';
-        verificationRelationships = ['authentication', 'assertionMethod', 'capabilityDelegation', 'capabilityInvocation'];
+        verificationRelationships = [
+          'authentication',
+          'assertionMethod',
+          'capabilityDelegation',
+          'capabilityInvocation',
+        ];
         break;
 
       case this.MULTICODEC.X25519_PUB:
+        if (keyBytes.length !== 32) {
+          throw new Error('X25519 public key must be 32 bytes');
+        }
         keyType = 'X25519KeyAgreementKey2020';
         verificationRelationships = ['keyAgreement'];
         break;
