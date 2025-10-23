@@ -217,11 +217,21 @@ export function createFullyEnabledResolver(options: {
 }
 
 /**
+ * Helper function to parse truthy values from environment variables
+ * Accepts: true, 1, yes, on, enabled (case-insensitive)
+ */
+function parseTruthyEnvVar(value: string | undefined): boolean {
+  if (!value) return false;
+  const normalized = value.toLowerCase().trim();
+  return ['true', '1', 'yes', 'on', 'enabled'].includes(normalized);
+}
+
+/**
  * Environment-based auto-configuration
- * 
+ *
  * Automatically enables DID methods based on environment variables:
- * - ENABLE_DID_ETHR=true
- * - ENABLE_DID_ION=true
+ * - ENABLE_DID_ETHR=true|1|yes|on|enabled
+ * - ENABLE_DID_ION=true|1|yes|on|enabled
  * - ETHR_NETWORKS=mainnet,polygon
  * - ION_NODES=https://node1.com,https://node2.com
  * - INFURA_PROJECT_ID=your_project_id
@@ -230,7 +240,7 @@ export function createResolverFromEnvironment(): UniversalResolver {
   const config: AutoDIDConfig = {};
 
   // Configure did:ethr from environment
-  if (process.env.ENABLE_DID_ETHR === 'true') {
+  if (parseTruthyEnvVar(process.env.ENABLE_DID_ETHR)) {
     config.ethr = { enabled: true };
     
     if (process.env.ETHR_NETWORKS) {
@@ -289,7 +299,7 @@ export function createResolverFromEnvironment(): UniversalResolver {
   }
 
   // Configure did:ion from environment
-  if (process.env.ENABLE_DID_ION === 'true') {
+  if (parseTruthyEnvVar(process.env.ENABLE_DID_ION)) {
     config.ion = { enabled: true };
     
     if (process.env.ION_NODES) {

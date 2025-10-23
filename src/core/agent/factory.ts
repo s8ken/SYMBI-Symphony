@@ -3,6 +3,7 @@
  * Factory for creating and configuring different types of AI agents
  */
 
+import crypto from 'crypto';
 import { SymbiAgentSDK } from './sdk';
 import { AgentConfig, AgentType, AgentCapability, AgentPermission, TrustArticles, TrustDeclaration } from './types';
 import { trustScoring } from '../trust/scoring';
@@ -476,15 +477,19 @@ export class AgentFactory {
   }
 
   /**
-   * Generate a secure API key
+   * Generate a cryptographically secure API key
+   *
+   * SECURITY: Uses crypto.randomBytes() for cryptographically secure random generation.
+   * Never use Math.random() for security-critical operations like API key generation.
    */
   static generateApiKey(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 64; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    // Generate 48 bytes of cryptographically secure random data
+    // This provides 384 bits of entropy (recommended: 256+ bits for API keys)
+    const randomBytes = crypto.randomBytes(48);
+
+    // Encode as base64url (URL-safe, no padding)
+    // Results in a 64-character string
+    return randomBytes.toString('base64url');
   }
 }
 

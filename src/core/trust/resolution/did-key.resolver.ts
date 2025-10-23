@@ -114,8 +114,21 @@ export class DidKeyResolver implements DIDResolver {
 
   /**
    * Decode base58btc string to bytes
+   *
+   * Spec-compliant implementation that preserves leading zeros and correct byte order
    */
   private decodeBase58(encoded: string): Uint8Array {
+    // Count leading '1's (represent leading zero bytes)
+    let leadingZeros = 0;
+    for (const char of encoded) {
+      if (char === '1') {
+        leadingZeros++;
+      } else {
+        break;
+      }
+    }
+
+    // Decode the number in big-endian order
     const bytes: number[] = [];
     for (const char of encoded) {
       const index = this.BASE58_ALPHABET.indexOf(char);
@@ -124,6 +137,7 @@ export class DidKeyResolver implements DIDResolver {
       }
 
       let carry = index;
+      // Process from right to left (little-endian in array)
       for (let i = 0; i < bytes.length; i++) {
         carry += bytes[i] * 58;
         bytes[i] = carry % 256;
@@ -136,8 +150,15 @@ export class DidKeyResolver implements DIDResolver {
       }
     }
 
-    // Reverse and convert to Uint8Array
-    return new Uint8Array(bytes.reverse());
+    // The result is in little-endian, reverse to get big-endian
+    const result = new Uint8Array(leadingZeros + bytes.length);
+    // Leading zeros stay as zeros (already initialized)
+    // Copy reversed bytes after leading zeros
+    for (let i = 0; i < bytes.length; i++) {
+      result[leadingZeros + i] = bytes[bytes.length - 1 - i];
+    }
+
+    return result;
   }
 
   /**

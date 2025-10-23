@@ -196,8 +196,24 @@ export class DidWebResolver implements DIDResolver {
           }
         }
 
-        resolutionMetadata.error = 'networkError';
-        resolutionMetadata.message = error.message || 'Network request failed';
+        // DNS failures should be treated as notFound (domain doesn't exist)
+        // Check for common DNS error codes and messages
+        const isDnsFailure =
+          error.code === 'ENOTFOUND' ||
+          error.code === 'EAI_AGAIN' ||
+          (error.message && (
+            error.message.includes('getaddrinfo') ||
+            error.message.includes('ENOTFOUND') ||
+            error.message.includes('DNS')
+          ));
+
+        if (isDnsFailure) {
+          resolutionMetadata.error = 'notFound';
+          resolutionMetadata.message = `Domain not found: ${error.message || 'DNS lookup failed'}`;
+        } else {
+          resolutionMetadata.error = 'networkError';
+          resolutionMetadata.message = error.message || 'Network request failed';
+        }
       }
 
       resolutionMetadata.duration = Date.now() - startTime;

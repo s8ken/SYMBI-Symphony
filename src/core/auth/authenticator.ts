@@ -18,6 +18,23 @@ import {
   RateLimitError
 } from './types';
 
+/**
+ * Interface for credential storage and validation
+ * Implement this interface to provide your own credential store
+ */
+export interface CredentialStore {
+  /**
+   * Validate agent credentials against stored values
+   * @returns true if credentials are valid, false otherwise
+   */
+  validateCredentials(credentials: AgentCredentials): Promise<boolean>;
+
+  /**
+   * Get agent permissions and roles
+   */
+  getAgentPermissions(agentId: string): Promise<{ roles: string[]; permissions: string[] }>;
+}
+
 export class Authenticator {
   private sessions: Map<string, AuthSession> = new Map();
   private tokens: Map<string, AuthToken> = new Map();
@@ -26,8 +43,11 @@ export class Authenticator {
   private config: AuthConfig;
   private mfaConfig: MFAConfig;
   private rateLimitConfig: RateLimitConfig;
+  private credentialStore?: CredentialStore;
+  private apiKeyStore: Map<string, string> = new Map(); // agentId -> hashedApiKey (for default implementation)
 
-  constructor(config?: Partial<AuthConfig>) {
+  constructor(config?: Partial<AuthConfig>, credentialStore?: CredentialStore) {
+    this.credentialStore = credentialStore;
     this.config = {
       jwtSecret: process.env.JWT_SECRET || 'default-secret-change-in-production',
       jwtExpiresIn: '1h',
@@ -235,11 +255,87 @@ export class Authenticator {
 
   /**
    * Validate credentials based on auth method
+   *
+   * SECURITY: This performs actual cryptographic validation of credentials.
+   * If a CredentialStore is provided, it delegates validation to that store.
+   * Otherwise, it uses the built-in API key validation with secure hashing.
    */
   private async validateCredentials(credentials: AgentCredentials): Promise<boolean> {
-    // In a real implementation, this would check against a database
-    // For now, we'll use a simple validation
-    return !!(credentials.apiKey && credentials.agentId);
+    // Basic input validation
+    if (!credentials || !credentials.agentId) {
+      return false;
+    }
+
+    // If custom credential store is provided, use it
+    if (this.credentialStore) {
+      try {
+        return await this.credentialStore.validateCredentials(credentials);
+      } catch (error) {
+        console.error('Credential validation error:', error);
+        return false;
+      }
+    }
+
+    // Built-in validation for API keys
+    if (credentials.apiKey) {
+      // Check if agent exists in store
+      const storedHashedKey = this.apiKeyStore.get(credentials.agentId);
+      if (!storedHashedKey) {
+        // Agent not found or not registered
+        return false;
+      }
+
+      // Hash the provided API key using constant-time comparison
+      const providedKeyHash = crypto
+        .createHash('sha256')
+        .update(credentials.apiKey)
+        .digest('hex');
+
+      // Constant-time comparison to prevent timing attacks
+      return crypto.timingSafeEqual(
+        Buffer.from(storedHashedKey),
+        Buffer.from(providedKeyHash)
+      );
+    }
+
+    // Token validation (if JWT token provided)
+    if (credentials.token) {
+      // Token validation would be handled by validateToken()
+      // This is for initial authentication with a token
+      const session = await this.validateToken(credentials.token);
+      return session !== null && session.agentId === credentials.agentId;
+    }
+
+    // Certificate-based authentication
+    if (credentials.certificate && credentials.privateKey) {
+      // In a production implementation, this would verify the certificate
+      // against a trusted CA and validate the private key matches
+      // For now, we require a CredentialStore for certificate auth
+      return false;
+    }
+
+    // No valid credentials provided
+    return false;
+  }
+
+  /**
+   * Register an agent with an API key (for default implementation)
+   * In production, use a CredentialStore instead
+   */
+  registerAgent(agentId: string, apiKey: string): void {
+    const hashedKey = crypto
+      .createHash('sha256')
+      .update(apiKey)
+      .digest('hex');
+
+    this.apiKeyStore.set(agentId, hashedKey);
+  }
+
+  /**
+   * Unregister an agent (remove from default store)
+   */
+  unregisterAgent(agentId: string): void {
+    this.apiKeyStore.delete(agentId);
   }
 
   /**
