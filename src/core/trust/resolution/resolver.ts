@@ -40,7 +40,9 @@ export class UniversalResolver {
     // Register default resolvers
     this.registerResolver(new DidWebResolver(this.cache));
     this.registerResolver(new DidKeyResolver());
-    // did:ethr and did:ion require external dependencies, so they're not auto-registered
+    
+    // Note: did:ethr and did:ion require external dependencies and configuration
+    // They are registered when providers are provided
   }
 
   /**

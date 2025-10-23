@@ -1,6 +1,8 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import * as ed25519 from '@noble/ed25519';
+import { utils as secp256k1Utils } from '@noble/secp256k1';
 import {
   KMSProvider,
   KeyMetadata,
@@ -52,7 +54,7 @@ export class LocalKMSProvider implements KMSProvider {
     const now = new Date();
 
     // Generate key pair based on algorithm
-    const keyPair = this.generateKeyPair(options.algorithm);
+    const keyPair = await this.generateKeyPair(options.algorithm);
 
     const localKey: LocalKey = {
       keyId,
@@ -153,10 +155,30 @@ export class LocalKMSProvider implements KMSProvider {
       throw new Error(`Key usage is not SIGN_VERIFY: ${key.usage}`);
     }
 
-    const algorithm = this.getSignAlgorithm(key.algorithm);
-    const sign = crypto.createSign(algorithm);
-    sign.update(data);
-    return sign.sign(key.privateKey);
+    switch (key.algorithm) {
+      case 'ED25519':
+        // Use noble ed25519 for signing
+        const signature = await ed25519.sign(new Uint8Array(data), new Uint8Array(key.privateKey));
+        return Buffer.from(signature);
+      
+      case 'EC_P256':
+      case 'EC_P384':
+        // Use Node.js crypto for EC signatures
+        const algorithm = this.getSignAlgorithm(key.algorithm);
+        const sign = crypto.createSign(algorithm);
+        sign.update(data);
+        return sign.sign(key.privateKey);
+      
+      case 'RSA_2048':
+      case 'RSA_4096':
+        // Use Node.js crypto for RSA signatures
+        const rsaSign = crypto.createSign('RSA-SHA256');
+        rsaSign.update(data);
+        return rsaSign.sign(key.privateKey);
+      
+      default:
+        throw new Error(`Unsupported signing algorithm: ${key.algorithm}`);
+    }
   }
 
   async verify(
@@ -170,10 +192,33 @@ export class LocalKMSProvider implements KMSProvider {
       throw new Error(`Key not found: ${keyId}`);
     }
 
-    const algorithm = this.getSignAlgorithm(key.algorithm);
-    const verify = crypto.createVerify(algorithm);
-    verify.update(data);
-    return verify.verify(key.publicKey, signature);
+    switch (key.algorithm) {
+      case 'ED25519':
+        // Use noble ed25519 for verification
+        return await ed25519.verify(
+          new Uint8Array(signature),
+          new Uint8Array(data),
+          new Uint8Array(key.publicKey)
+        );
+      
+      case 'EC_P256':
+      case 'EC_P384':
+        // Use Node.js crypto for EC verification
+        const algorithm = this.getSignAlgorithm(key.algorithm);
+        const verify = crypto.createVerify(algorithm);
+        verify.update(data);
+        return verify.verify(key.publicKey, signature);
+      
+      case 'RSA_2048':
+      case 'RSA_4096':
+        // Use Node.js crypto for RSA verification
+        const rsaVerify = crypto.createVerify('RSA-SHA256');
+        rsaVerify.update(data);
+        return rsaVerify.verify(key.publicKey, signature);
+      
+      default:
+        throw new Error(`Unsupported verification algorithm: ${key.algorithm}`);
+    }
   }
 
   async encrypt(keyId: string, plaintext: Buffer, options?: EncryptOptions): Promise<Buffer> {
@@ -253,7 +298,7 @@ export class LocalKMSProvider implements KMSProvider {
     }
 
     // Generate new key pair
-    const keyPair = this.generateKeyPair(oldKey.algorithm);
+    const keyPair = await this.generateKeyPair(oldKey.algorithm);
 
     oldKey.privateKey = keyPair.privateKey;
     oldKey.publicKey = keyPair.publicKey;
@@ -265,7 +310,7 @@ export class LocalKMSProvider implements KMSProvider {
   /**
    * Generate key pair based on algorithm
    */
-  private generateKeyPair(algorithm: KeyAlgorithm): { privateKey: Buffer; publicKey: Buffer } {
+  private async generateKeyPair(algorithm: KeyAlgorithm): Promise<{ privateKey: Buffer; publicKey: Buffer }> {
     switch (algorithm) {
       case 'RSA_2048':
         return this.generateRSAKeyPair(2048);
@@ -302,12 +347,15 @@ export class LocalKMSProvider implements KMSProvider {
     return { privateKey, publicKey };
   }
 
-  private generateED25519KeyPair(): { privateKey: Buffer; publicKey: Buffer } {
-    const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519', {
-      publicKeyEncoding: { type: 'spki', format: 'der' },
-      privateKeyEncoding: { type: 'pkcs8', format: 'der' },
-    });
-    return { privateKey, publicKey };
+  private async generateED25519KeyPair(): Promise<{ privateKey: Buffer; publicKey: Buffer }> {
+    // Generate Ed25519 key pair using noble library
+    const privateKey = ed25519.utils.randomSecretKey();
+    const publicKey = await ed25519.getPublicKey(privateKey);
+    
+    return { 
+      privateKey: Buffer.from(privateKey), 
+      publicKey: Buffer.from(publicKey) 
+    };
   }
 
   private generateAESKey(): { privateKey: Buffer; publicKey: Buffer } {
@@ -327,8 +375,6 @@ export class LocalKMSProvider implements KMSProvider {
         return 'SHA256';
       case 'EC_P384':
         return 'SHA384';
-      case 'ED25519':
-        return 'Ed25519';
       default:
         throw new Error(`No signing algorithm for: ${keyAlgorithm}`);
     }

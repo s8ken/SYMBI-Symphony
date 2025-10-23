@@ -4,6 +4,7 @@
  */
 
 import { DIDDocument, VerificationMethod, ServiceEndpoint } from '../agent/types';
+import { UniversalResolver, resolveDID } from './resolution/resolver';
 
 export type DIDMethod = 'web' | 'key' | 'ethr' | 'ion';
 
@@ -15,6 +16,13 @@ export interface DIDGenerationOptions {
 }
 
 export class DIDManager {
+  private universalResolver: UniversalResolver;
+
+  constructor() {
+    // Initialize the universal resolver
+    this.universalResolver = new UniversalResolver();
+  }
+
   /**
    * Generate a DID for an agent
    */
@@ -84,17 +92,16 @@ export class DIDManager {
   }
 
   /**
-   * Resolve a DID to its DID document (placeholder)
+   * Resolve a DID to its DID document
    */
   async resolveDID(did: string): Promise<DIDDocument | null> {
-    // TODO: Implement actual DID resolution
-    // This would involve:
-    // 1. Parsing the DID method
-    // 2. Fetching the DID document from the appropriate registry
-    // 3. Verifying the document integrity
-
-    // For now, return null
-    return null;
+    try {
+      const result = await this.universalResolver.resolve(did);
+      return result.didDocument;
+    } catch (error) {
+      console.error(`Failed to resolve DID ${did}:`, error);
+      return null;
+    }
   }
 
   /**
