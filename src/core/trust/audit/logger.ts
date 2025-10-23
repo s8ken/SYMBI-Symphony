@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import * as ed25519 from '@noble/ed25519';
 import {
   AuditEntry,
   SignedAuditEntry,

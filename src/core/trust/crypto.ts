@@ -5,7 +5,11 @@
  * P0 CRITICAL: Required for pilot
  */
 
-import * as crypto from 'crypto';
+import * as ed25519 from '@noble/ed25519';
+import * as secp256k1 from '@noble/secp256k1';
+import { canonicalize } from 'json-canonicalize';
+import { sha256 } from '@noble/hashes/sha2';
+import { sha512 } from '@noble/hashes/sha2';
 
 export type SignatureAlgorithm = 'Ed25519' | 'ES256K' | 'RS256';
 
@@ -26,60 +30,11 @@ export interface CanonicalizeOptions {
  */
 export function canonicalizeJSON(data: any, options: CanonicalizeOptions = { method: 'JCS' }): string {
   if (options.method === 'JCS') {
-    return canonicalizeJCS(data);
+    return canonicalize(data);
   } else {
     // URDNA2015 for RDF - placeholder for future implementation
     throw new Error('URDNA2015 not yet implemented');
   }
-}
-
-/**
- * JSON Canonicalization Scheme (RFC 8785)
- * Deterministic JSON serialization for cryptographic operations
- */
-function canonicalizeJCS(data: any): string {
-  if (data === null) {
-    return 'null';
-  }
-
-  if (typeof data === 'boolean') {
-    return data ? 'true' : 'false';
-  }
-
-  if (typeof data === 'number') {
-    // IEEE 754 canonical representation
-    if (Number.isFinite(data)) {
-      let str = data.toString();
-      // Handle scientific notation consistently
-      if (str.includes('e') || str.includes('E')) {
-        const num = Number(data);
-        str = num.toExponential();
-      }
-      return str;
-    }
-    throw new Error('Cannot canonicalize non-finite number');
-  }
-
-  if (typeof data === 'string') {
-    return JSON.stringify(data);
-  }
-
-  if (Array.isArray(data)) {
-    const elements = data.map(item => canonicalizeJCS(item));
-    return '[' + elements.join(',') + ']';
-  }
-
-  if (typeof data === 'object') {
-    // Sort keys lexicographically
-    const keys = Object.keys(data).sort();
-    const pairs = keys.map(key => {
-      const value = canonicalizeJCS(data[key]);
-      return JSON.stringify(key) + ':' + value;
-    });
-    return '{' + pairs.join(',') + '}';
-  }
-
-  throw new Error(`Cannot canonicalize type: ${typeof data}`);
 }
 
 /**
@@ -95,7 +50,7 @@ export async function verifyEd25519Signature(
   try {
     // Canonicalize the data
     const canonical = canonicalizeJSON(data, options);
-    const message = Buffer.from(canonical, 'utf8');
+    const message = new TextEncoder().encode(canonical);
 
     // Decode multibase (assuming 'z' prefix for base58btc)
     if (!signatureMultibase.startsWith('z') || !publicKeyMultibase.startsWith('z')) {
@@ -110,20 +65,8 @@ export async function verifyEd25519Signature(
     const signature = base58Decode(signatureMultibase.substring(1));
     const publicKey = base58Decode(publicKeyMultibase.substring(1));
 
-    // Ed25519 verification using Node.js crypto
-    const isValid = crypto.verify(
-      null, // Ed25519 doesn't use a hash function
-      message,
-      {
-        key: Buffer.concat([
-          Buffer.from([0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00]), // ASN.1 prefix
-          publicKey
-        ]),
-        format: 'der',
-        type: 'spki'
-      },
-      signature
-    );
+    // Ed25519 verification using noble library
+    const isValid = await ed25519.verify(signature, message, publicKey);
 
     return {
       valid: isValid,
@@ -144,33 +87,24 @@ export async function verifyEd25519Signature(
  */
 export async function verifySecp256k1Signature(
   data: any,
-  signature: string,
-  publicKey: string,
+  signatureHex: string,
+  publicKeyHex: string,
   options?: CanonicalizeOptions
 ): Promise<SignatureVerificationResult> {
   try {
     // Canonicalize the data
     const canonical = canonicalizeJSON(data, options);
-    const message = Buffer.from(canonical, 'utf8');
+    const message = new TextEncoder().encode(canonical);
 
     // Hash the message with SHA-256 (ES256K uses SHA-256)
-    const hash = crypto.createHash('sha256').update(message).digest();
+    const hash = sha256(message);
 
     // Decode signature and public key (hex format for Ethereum)
-    const sigBuffer = Buffer.from(signature, 'hex');
-    const pubKeyBuffer = Buffer.from(publicKey, 'hex');
+    const signature = hexToBytes(signatureHex);
+    const publicKey = hexToBytes(publicKeyHex);
 
-    // secp256k1 verification
-    const isValid = crypto.verify(
-      'sha256',
-      hash,
-      {
-        key: pubKeyBuffer,
-        format: 'der',
-        type: 'spki'
-      },
-      sigBuffer
-    );
+    // secp256k1 verification using noble library
+    const isValid = await secp256k1.verify(signature, hash, publicKey);
 
     return {
       valid: isValid,
@@ -196,6 +130,9 @@ export async function verifyRSASignature(
   options?: CanonicalizeOptions
 ): Promise<SignatureVerificationResult> {
   try {
+    // For RSA signatures, we'll need Node.js crypto module
+    const crypto = await import('crypto');
+    
     const canonical = canonicalizeJSON(data, options);
     const message = Buffer.from(canonical, 'utf8');
 
@@ -250,7 +187,7 @@ export async function verifyCredentialProof(
       return verifyEd25519Signature(
         credentialWithoutProof,
         proof.proofValue,
-        proof.verificationMethod, // This should resolve to public key
+        proof.verificationMethod,
         options
       );
 
@@ -284,7 +221,7 @@ export async function verifyCredentialProof(
  * Base58 decoding (Bitcoin alphabet)
  * Used for multibase 'z' prefix
  */
-function base58Decode(encoded: string): Buffer {
+function base58Decode(encoded: string): Uint8Array {
   const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   const base = BigInt(58);
 
@@ -297,17 +234,49 @@ function base58Decode(encoded: string): Buffer {
     result = result * base + BigInt(digit);
   }
 
-  // Convert to buffer
+  // Convert to Uint8Array
   const hex = result.toString(16);
-  return Buffer.from(hex.length % 2 ? '0' + hex : hex, 'hex');
+  const paddedHex = hex.length % 2 ? '0' + hex : hex;
+  return hexToBytes(paddedHex);
+}
+
+/**
+ * Convert hex string to Uint8Array
+ */
+function hexToBytes(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
 }
 
 /**
  * Generate crypto-secure random bytes
  * Use this instead of Math.random() for keys/nonces
  */
-export function generateSecureRandom(length: number): Buffer {
+export function generateSecureRandom(length: number): Uint8Array {
+  // Use Node.js crypto module for secure random generation
+  const crypto = require('crypto');
   return crypto.randomBytes(length);
+}
+
+/**
+ * Generate Ed25519 key pair
+ */
+export async function generateEd25519KeyPair(): Promise<{ publicKey: Uint8Array; privateKey: Uint8Array }> {
+  const privateKey = ed25519.utils.randomSecretKey();
+  const publicKey = await ed25519.getPublicKey(privateKey);
+  return { publicKey, privateKey };
+}
+
+/**
+ * Sign data with Ed25519
+ */
+export async function signEd25519(data: any, privateKey: Uint8Array): Promise<Uint8Array> {
+  const canonical = canonicalizeJSON(data);
+  const message = new TextEncoder().encode(canonical);
+  return await ed25519.sign(message, privateKey);
 }
 
 /**
@@ -316,14 +285,14 @@ export function generateSecureRandom(length: number): Buffer {
  */
 export function generateSecureApiKey(length: number = 64): string {
   const bytes = generateSecureRandom(length);
-  return bytes.toString('base64url');
+  return Buffer.from(bytes).toString('base64url');
 }
 
 /**
  * Generate nonce for replay protection
  */
 export function generateNonce(): string {
-  return generateSecureRandom(16).toString('base64url');
+  return Buffer.from(generateSecureRandom(16)).toString('base64url');
 }
 
 /**
@@ -334,5 +303,8 @@ export function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) {
     return false;
   }
+  
+  // Use Node.js crypto module for timing-safe comparison
+  const crypto = require('crypto');
   return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
