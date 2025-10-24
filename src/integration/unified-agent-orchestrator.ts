@@ -3,14 +3,20 @@
  * Connects Symphony's SymbiOrchestrator with Tactical Command's SymbiIntegrationService
  */
 
-import { SymbiOrchestrator } from '../core/agent/orchestrator.js';
-import { SymbiIntegrationService } from '../../Tactical Command/lib/services/symbi-integration.js';
-import { 
-  UnifiedAgentConfig, 
-  UnifiedMessage, 
+import { AgentOrchestrator as SymbiOrchestrator } from '../stubs/orchestrator';
+import { SymbiAgentSpec } from '../stubs/symbi-integration';
+
+// Define SymbiIntegrationService interface locally for now
+interface SymbiIntegrationService {
+  initialize(): Promise<void>;
+}
+import {
+  UnifiedAgentConfig,
+  UnifiedMessage,
   TrustValidatedTask,
   TaskResult,
-  UnifiedAgentStatus
+  UnifiedAgentStatus,
+  TrustResult
 } from './types.js';
 import { TrustOracleBridge } from './trust-oracle-bridge.js';
 
@@ -37,11 +43,11 @@ export class UnifiedAgentOrchestrator {
       await this.symphonyOrchestrator.registerAgent({
         id: config.id,
         name: config.name,
-        type: config.type,
         capabilities: config.capabilities,
         permissions: config.permissions,
         metadata: {
           ...config.metadata,
+          type: config.type,
           tacticalSpec: config.tacticalSpec
         }
       });
@@ -52,7 +58,7 @@ export class UnifiedAgentOrchestrator {
       console.log(`✅ Unified agent ${config.id} registered successfully`);
     } catch (error) {
       console.error(`❌ Failed to register unified agent ${config.id}:`, error);
-      throw new Error(`Unified agent registration failed: ${error.message}`);
+      throw new Error(`Unified agent registration failed: ${(error as Error).message}`);
     }
   }
 
@@ -160,9 +166,9 @@ export class UnifiedAgentOrchestrator {
 
     } catch (error) {
       console.error(`Task execution failed for ${task.id}:`, error);
-      
+
       // Record failure in trust evaluation
-      const failureEvaluation = {
+      const failureEvaluation: TrustResult = {
         id: `eval_${Date.now()}_failure`,
         timestamp: new Date(),
         score: 0,
@@ -174,7 +180,7 @@ export class UnifiedAgentOrchestrator {
           title: 'Task Execution Failure',
           severity: 'high',
           status: 'error',
-          reason: error.message
+          reason: (error as Error).message
         }],
         evidence: []
       };
@@ -189,7 +195,7 @@ export class UnifiedAgentOrchestrator {
         status: 'failed',
         result: null,
         trustEvaluation: failureEvaluation,
-        error: error.message
+        error: (error as Error).message
       };
     }
   }
@@ -218,7 +224,7 @@ export class UnifiedAgentOrchestrator {
 
     } catch (error) {
       console.error(`Failed to get unified status for agent ${agentId}:`, error);
-      throw new Error(`Unable to retrieve unified agent status: ${error.message}`);
+      throw new Error(`Unable to retrieve unified agent status: ${(error as Error).message}`);
     }
   }
 

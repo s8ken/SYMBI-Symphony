@@ -11,10 +11,10 @@ import {
   TrustValidatedTask
 } from '../types';
 
-// Mock the external dependencies
-jest.mock('../../../SYMBI Vault/backend/core/trustOracle.js');
-jest.mock('../../../SYMBI Vault/backend/models/TrustBond.js');
-jest.mock('../../agent/orchestrator.js');
+// Mock the stub dependencies
+jest.mock('../../stubs/trustOracle');
+jest.mock('../../stubs/TrustBond');
+jest.mock('../../stubs/orchestrator');
 
 describe('SYMBI Integration Tests', () => {
   let trustOracleBridge: TrustOracleBridge;

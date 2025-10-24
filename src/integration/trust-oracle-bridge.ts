@@ -3,8 +3,8 @@
  * Integrates SYMBI Vault's TrustOracle with Tactical Command operations
  */
 
-import { TrustOracle } from '../../SYMBI Vault/backend/core/trustOracle.js';
-import { TrustBond } from '../../SYMBI Vault/backend/models/TrustBond.js';
+import { TrustOracle } from '../stubs/trustOracle';
+import { TrustBond } from '../stubs/TrustBond';
 import { 
   TrustContext, 
   TrustResult, 
@@ -113,7 +113,7 @@ export class TrustOracleBridge {
       
     } catch (error) {
       console.error('Failed to update agent trust score:', error);
-      throw new Error(`Trust score update failed: ${error.message}`);
+      throw new Error(`Trust score update failed: ${(error as Error).message}`);
     }
   }
 
@@ -129,7 +129,7 @@ export class TrustOracleBridge {
       }
 
       const recentViolations = bond.violations.filter(
-        v => Date.now() - v.createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 // 30 days
+        (v: any) => Date.now() - v.createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 // 30 days
       );
 
       const report: ComplianceReport = {
@@ -137,7 +137,7 @@ export class TrustOracleBridge {
         overallScore: bond.trustScore,
         trustBand: bond.trustBand,
         lastEvaluation: bond.history
-          .filter(h => h.action === 'score_updated')
+          .filter((h: any) => h.action === 'score_updated')
           .pop()?.at || new Date(),
         
         // Article-specific compliance
@@ -153,10 +153,10 @@ export class TrustOracleBridge {
         
         violationSummary: {
           total: bond.violations.length,
-          critical: bond.violations.filter(v => v.severity === 'critical').length,
-          high: bond.violations.filter(v => v.severity === 'high').length,
-          medium: bond.violations.filter(v => v.severity === 'medium').length,
-          low: bond.violations.filter(v => v.severity === 'low').length,
+          critical: bond.violations.filter((v: any) => v.severity === 'critical').length,
+          high: bond.violations.filter((v: any) => v.severity === 'high').length,
+          medium: bond.violations.filter((v: any) => v.severity === 'medium').length,
+          low: bond.violations.filter((v: any) => v.severity === 'low').length,
           recent30Days: recentViolations.length
         },
         
@@ -184,11 +184,11 @@ export class TrustOracleBridge {
 
       // Check for recent violations
       const recentViolations = bond.violations.filter(
-        v => Date.now() - v.createdAt.getTime() < 24 * 60 * 60 * 1000 // 24 hours
+        (v: any) => Date.now() - v.createdAt.getTime() < 24 * 60 * 60 * 1000 // 24 hours
       );
 
       // Generate alerts for critical violations
-      recentViolations.forEach(violation => {
+      recentViolations.forEach((violation: any) => {
         if (violation.severity === 'critical' || violation.severity === 'high') {
           alerts.push({
             id: this.generateAlertId(),
@@ -377,7 +377,7 @@ export class TrustOracleBridge {
   }
 
   private getMaxViolationSeverity(violations: any[]): string {
-    const severityMap = { critical: 4, high: 3, medium: 2, low: 1 };
+    const severityMap: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
     const maxSeverity = violations.reduce((max, v) => {
       return Math.max(max, severityMap[v.severity] || 0);
     }, 0);
@@ -444,7 +444,7 @@ export class TrustOracleBridge {
 
   private calculateArticleCompliance(bond: any, articleType: string): any {
     // Calculate compliance for specific constitutional article
-    const articleViolations = bond.violations.filter(v => 
+    const articleViolations = bond.violations.filter((v: any) =>
       v.description.toLowerCase().includes(articleType.toLowerCase())
     );
     
@@ -466,7 +466,7 @@ export class TrustOracleBridge {
       recommendations.push('Increased supervision required due to recent violations');
     }
     
-    if (bond.violations.some(v => v.severity === 'critical')) {
+    if (bond.violations.some((v: any) => v.severity === 'critical')) {
       recommendations.push('Immediate review required for critical violations');
     }
     
@@ -475,7 +475,7 @@ export class TrustOracleBridge {
 
   private calculateComplianceTrend(bond: any): any {
     const scoreHistory = bond.history
-      .filter(h => h.action === 'score_updated')
+      .filter((h: any) => h.action === 'score_updated')
       .slice(-7); // Last 7 evaluations
 
     if (scoreHistory.length < 2) {
@@ -497,20 +497,20 @@ export class TrustOracleBridge {
   }
 
   private getRecommendedActions(violation: any): string[] {
-    const actionMap = {
+    const actionMap: Record<string, string[]> = {
       'consent_violation': ['Review consent parameters', 'Update data handling policies'],
       'policy_breach': ['Review compliance guidelines', 'Implement additional safeguards'],
       'behavior_anomaly': ['Analyze behavior patterns', 'Consider retraining'],
       'constitutional_violation': ['Immediate review required', 'Suspend agent if critical']
     };
-    
+
     return actionMap[violation.type] || ['Review violation details', 'Implement corrective actions'];
   }
 
   private calculateScoreTrend(bond: any): any {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const recentScore = bond.history
-      .filter(h => h.action === 'score_updated' && h.at >= weekAgo)
+      .filter((h: any) => h.action === 'score_updated' && h.at >= weekAgo)
       .pop();
 
     if (!recentScore) {

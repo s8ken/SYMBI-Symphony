@@ -70,7 +70,21 @@ module.exports = {
     '/dist/',
     '/coverage/',
     '/examples/',
-    '/docs/'
+    '/docs/',
+    '/SYMBI SYNERGY/',
+    '/SYMBI RESONATE/',
+    '/Tactical Command/',
+    '/trust-protocol-1/',
+    '/SYMBI Vault/'
+  ],
+
+  // Module path ignore patterns
+  modulePathIgnorePatterns: [
+    '<rootDir>/SYMBI SYNERGY/',
+    '<rootDir>/SYMBI RESONATE/',
+    '<rootDir>/Tactical Command/',
+    '<rootDir>/trust-protocol-1/',
+    '<rootDir>/SYMBI Vault/'
   ],
 
   // Transform ignore patterns

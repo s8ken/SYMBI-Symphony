@@ -4,8 +4,7 @@
 
 import { TrustOracleBridge } from './trust-oracle-bridge';
 import { UnifiedAgentOrchestrator } from './unified-agent-orchestrator';
-import { SymbiOrchestrator } from '../core/agent/orchestrator';
-import { SymbiIntegrationService } from '../../Tactical Command/lib/services/symbi-integration';
+import { AgentOrchestrator as SymbiOrchestrator } from '../stubs/orchestrator';
 
 // Initialize integration components
 const trustOracleBridge = new TrustOracleBridge();
