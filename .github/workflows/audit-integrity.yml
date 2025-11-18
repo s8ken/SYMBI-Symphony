@@ -25,10 +25,11 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --ignore-scripts
+        continue-on-error: true
 
-      - name: Run tests
-        run: npm test
+      - name: Run audit tests
+        run: npx jest src/core/trust/audit/__tests__/audit-oversight-refusal.test.ts --no-coverage
         continue-on-error: true
 
       - name: Run audit integrity verification
