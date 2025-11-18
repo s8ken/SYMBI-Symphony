@@ -1,0 +1,10 @@
+{
+  "lockfiles": {
+    "package-lock.json": {
+      "checksum": "e25efa7535786225b44c74e69a49d7e03cc4465fb6ca3420f1ebc56ec10b22c4",
+      "algorithm": "sha256",
+      "lastUpdated": "2025-11-18T17:05:00.000Z"
+    }
+  },
+  "description": "Tracked checksums for lockfiles to detect unauthorized modifications. Update this file when legitimately updating dependencies via chore(deps) commits or with dependency-update label."
+}

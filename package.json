@@ -18,6 +18,11 @@
     "url": "https://github.com/s8ken/SYMBI-Symphony/issues"
   },
   "homepage": "https://symbi.world/symbi-symphony",
+  "workspaces": [
+    "core/agent",
+    "Agentverse/symbi-executor",
+    "Agentverse/ui"
+  ],
   "scripts": {
     "prepublishOnly": "npm run build",
     "prepare": "npm run build",
@@ -39,7 +44,8 @@
     "pilot:enroll": "node dist/scripts/pilot/enroll.js",
     "pilot:issue": "node dist/scripts/pilot/issue.js",
     "pilot:verify": "node dist/scripts/pilot/verify.js",
-    "pilot:revoke": "node dist/scripts/pilot/revoke.js"
+    "pilot:revoke": "node dist/scripts/pilot/revoke.js",
+    "test:security": "npm run lint -- --max-warnings=0 && npm audit --audit-level=moderate"
   },
   "keywords": [
     "ai",
@@ -68,15 +74,21 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "@commitlint/cli": "^18.4.0",
+    "@commitlint/config-conventional": "^18.4.0",
     "@types/jest": "^29.0.0",
     "@types/node": "^20.0.0",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.0.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-jsdoc": "^46.9.0",
+    "eslint-plugin-security": "^1.7.1",
     "fast-check": "^3.15.0",
     "jest": "^29.0.0",
     "jest-junit": "^16.0.0",
+    "license-checker": "^25.0.1",
     "rimraf": "^5.0.0",
     "snyk": "^1.1250.0",
     "ts-jest": "^29.1.0",

@@ -1,0 +1,13 @@
+{
+  "allowedLicenses": [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "CC0-1.0",
+    "Unlicense",
+    "0BSD"
+  ],
+  "description": "License allowlist for dependency validation. Dependencies must have licenses in this list unless a license-exception label is present on the PR."
+}
