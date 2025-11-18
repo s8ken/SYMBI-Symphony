@@ -1,0 +1,65 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Build artifacts
+dist
+build
+out
+*.tsbuildinfo
+
+# Testing
+coverage
+.nyc_output
+test-results
+__tests__
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+.cache
+
+# Security
+*.pem
+*.key
+*.cert
+secrets
+credentials
+kms-store
+.kms
+
+# CI/CD
+.github/workflows
+sarif-reports
+violations.json
+license-report.json
+coverage-summary.json
