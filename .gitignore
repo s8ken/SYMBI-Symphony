@@ -58,6 +58,7 @@ Thumbs.db
 *.cert
 secrets/
 credentials/
+!src/**/credentials/
 
 # Database
 *.db

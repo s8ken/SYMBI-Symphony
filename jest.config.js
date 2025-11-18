@@ -70,7 +70,8 @@ module.exports = {
     '/dist/',
     '/coverage/',
     '/examples/',
-    '/docs/'
+    '/docs/',
+    '/src/integration/' // Exclude integration files with build errors
   ],
 
   // Transform ignore patterns

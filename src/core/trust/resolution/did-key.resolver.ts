@@ -175,20 +175,40 @@ export class DidKeyResolver implements DIDResolver {
     let codec: number;
     let offset: number;
 
+    if (data.length < 1) {
+      throw new Error('Invalid multicodec data: empty buffer');
+    }
+
     if ((data[0] & 0x80) === 0) {
       // Single byte varint
       codec = data[0];
       offset = 1;
     } else if (data.length >= 2) {
-      // Two byte varint
-      // For multicodec 0xed01:
-      // First byte: 0xed (11101101) - MSB set means continuation
-      // Second byte: 0x01 (00000001) - MSB clear means end
-      // The actual value is the two bytes combined as big-endian: 0xed01 = 60673
-      codec = (data[0] << 8) | data[1];
-      offset = 2;
+      // Two byte varint - proper varint decoding
+      // Remove continuation bit from first byte and combine
+      const byte1 = data[0] & 0x7f;
+      const byte2 = data[1];
+      
+      // Check if this matches known multicodec values
+      if (data[0] === 0xed && data[1] === 0x01) {
+        // Ed25519 public key (0xed01)
+        codec = this.MULTICODEC.ED25519_PUB;
+        offset = 2;
+      } else if (data[0] === 0xe7 && data[1] === 0x01) {
+        // secp256k1 public key (0xe701)
+        codec = this.MULTICODEC.SECP256K1_PUB;
+        offset = 2;
+      } else if (data[0] === 0xec && data[1] === 0x01) {
+        // X25519 public key (0xec01)
+        codec = this.MULTICODEC.X25519_PUB;
+        offset = 2;
+      } else {
+        // Generic varint decoding for other cases
+        codec = (byte1 | (byte2 << 7));
+        offset = 2;
+      }
     } else {
-      throw new Error('Invalid multicodec prefix');
+      throw new Error('Invalid multicodec prefix: insufficient data');
     }
 
     const keyBytes = data.slice(offset);
