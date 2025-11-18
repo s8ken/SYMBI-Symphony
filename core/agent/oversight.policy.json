@@ -1,0 +1,15 @@
+{
+  "riskRules": [
+    { "type": "deployment", "priority": "critical", "action": "require_approval" },
+    { "type": "security_scan", "priority": "high", "action": "require_approval" },
+    { "type": "integration", "priority": "high", "action": "require_approval" },
+    { "type": "code_review", "priority": "critical", "action": "require_approval" },
+    { "type": "repository_sync", "priority": "critical", "action": "require_approval" }
+  ],
+  "default": {
+    "critical": "require_approval",
+    "high": "warn",
+    "medium": "allow",
+    "low": "allow"
+  }
+}

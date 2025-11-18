@@ -14,6 +14,7 @@ export { AgentFactory } from './factory';
 
 // Orchestrator
 export { SymbiOrchestrator, type OrchestratorConfig } from './orchestrator';
+export { loadOversightPolicy, requiresHumanApproval } from './oversight'
 
 // Convenience functions for quick setup
 export { createRepositoryAgent, createWebsiteAgent, createIntegrationAgent } from './utils';

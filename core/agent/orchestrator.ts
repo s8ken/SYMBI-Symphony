@@ -16,6 +16,7 @@ import {
   AgentEvent,
   Priority
 } from './types';
+import { requiresHumanApproval } from './oversight'
 
 export interface OrchestratorConfig {
   id: string;
@@ -113,6 +114,19 @@ export class SymbiOrchestrator implements AgentOrchestrator {
    * Assign a task to an agent
    */
   async assignTask(task: Task): Promise<void> {
+    if (requiresHumanApproval(task)) {
+      task.status = 'paused'
+      task.metadata.updatedAt = new Date()
+      await this.recordEvent({
+        id: this.generateId(),
+        agentId: 'orchestrator',
+        type: 'human_oversight_required',
+        payload: { taskId: task.id, type: task.type, priority: task.priority },
+        timestamp: new Date()
+      })
+      this.tasks.set(task.id, task)
+      return
+    }
     // Find the best agent for this task
     const availableAgents = Array.from(this.agents.values()).filter(agent => {
       const status = this.agentStatus.get(agent.id);
@@ -165,6 +179,26 @@ export class SymbiOrchestrator implements AgentOrchestrator {
       timestamp: new Date(),
       priority: task.priority
     });
+  }
+
+  async approveTask(taskId: string, reviewerId: string, note?: string): Promise<void> {
+    const task = this.tasks.get(taskId)
+    if (!task) {
+      throw new Error(`Task ${taskId} not found`)
+    }
+    if (task.status !== 'paused') {
+      throw new Error(`Task ${taskId} is not awaiting approval`)
+    }
+    await this.recordEvent({
+      id: this.generateId(),
+      agentId: 'orchestrator',
+      type: 'human_oversight_approved',
+      payload: { taskId, reviewerId, note },
+      timestamp: new Date()
+    })
+    task.status = 'pending'
+    task.metadata.updatedAt = new Date()
+    await this.assignTask(task)
   }
 
   /**

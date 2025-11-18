@@ -7,8 +7,33 @@ on:
     branches: [ main, develop ]
 
 jobs:
+  approval-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      ready: ${{ steps.evaluate.outputs.ready }}
+    steps:
+      - name: Evaluate human approval
+        id: evaluate
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name)
+            const hasLabel = labels.includes('human-approved')
+            const { data: reviews } = await github.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            })
+            const approver = reviews.find(r => r.state === 'APPROVED')?.user?.login
+            const author = context.payload.pull_request.user.login
+            const independent = approver && approver !== author
+            core.setOutput('ready', hasLabel && independent ? 'true' : 'false')
+
   lint-and-test:
     runs-on: ubuntu-latest
+    needs: [approval-check]
+    if: github.event_name != 'pull_request' || needs.approval-check.outputs.ready == 'true'
 
     strategy:
       matrix:
