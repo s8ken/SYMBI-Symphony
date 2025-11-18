@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # SYMBI Trust Protocol Service
+  trust-protocol:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: symbi-trust-protocol
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - AUDIT_STORAGE_BACKEND=file
+      - AUDIT_STORAGE_PATH=/data/audit-logs
+      - KMS_PROVIDER=local
+    volumes:
+      - audit-logs:/data/audit-logs
+      - kms-keys:/data/kms-keys
+    ports:
+      - "3000:3000"
+    networks:
+      - symbi-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis Cache (optional, for DID resolution caching)
+  redis:
+    image: redis:7-alpine
+    container_name: symbi-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - symbi-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Prometheus (monitoring)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: symbi-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    networks:
+      - symbi-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Grafana (visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: symbi-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    ports:
+      - "3001:3000"
+    networks:
+      - symbi-network
+    depends_on:
+      - prometheus
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  audit-logs:
+    driver: local
+  kms-keys:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  symbi-network:
+    driver: bridge

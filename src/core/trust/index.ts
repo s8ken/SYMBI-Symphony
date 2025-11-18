@@ -28,3 +28,7 @@ export * from './revocation/types';
 
 // Blockchain
 export * from './blockchain/integration-manager';
+
+// Credentials
+export * from './credentials/issuer';
+export * from './credentials/verifier';

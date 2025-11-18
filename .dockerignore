@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+dist
+coverage
+*.tgz
+
+# Development files
+.git
+.gitignore
+.env
+.env.*
+*.log
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Tests
+**/__tests__
+**/*.test.ts
+**/*.spec.ts
+jest.config.js
+playwright.config.ts
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Examples and demos
+examples
+demo
+SYMBI SYNERGY
+SYMBI Vault
+Tactical Command
+Agentverse
+website-materials
