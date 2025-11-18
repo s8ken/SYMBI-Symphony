@@ -13,6 +13,10 @@ SYMBI Symphony now includes a comprehensive trust framework that provides:
 - ✅ **Verifiable Credentials** - Cryptographically signed trust declarations
 - ✅ **Audit Trails** - Complete transparency and accountability
 - ✅ **Compliance Tracking** - Monitor agent adherence to ethical standards
+- ✅ **Refusal Transparency** - Explicit logging of system refusals with clear reasons
+- ✅ **Human Oversight** - Tamper-evident logging of human review and intervention
+
+For detailed information on refusal and oversight logging, see [Refusal and Oversight Documentation](./docs/REFUSAL_AND_OVERSIGHT.md).
 
 ---
 

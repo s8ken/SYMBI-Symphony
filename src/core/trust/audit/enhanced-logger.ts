@@ -464,3 +464,136 @@ export function getEnhancedAuditLogger(): EnhancedAuditLogger {
 export function setEnhancedAuditLogger(logger: EnhancedAuditLogger): void {
   globalEnhancedLogger = logger;
 }
+
+/**
+ * Helper function to log refusal events
+ */
+export async function logRefusalEvent(params: {
+  actor: AuditActor;
+  conversationId?: string;
+  receiptId?: string;
+  refusalType: import('./refusal-taxonomy').RefusalType;
+  reasonSummary: string;
+  rightsImpacted?: string[];
+  notification?: {
+    channel: import('./refusal-taxonomy').RefusalNotificationChannel;
+    notifiedAt?: Date;
+    receiptId?: string;
+  };
+  requestContext?: Record<string, any>;
+}): Promise<SignedAuditEntry> {
+  const logger = getEnhancedAuditLogger();
+  
+  const details: import('./refusal-taxonomy').RefusalEventDetails = {
+    refusalType: params.refusalType,
+    reasonSummary: params.reasonSummary,
+    rightsImpacted: params.rightsImpacted,
+    notification: params.notification ? {
+      channel: params.notification.channel,
+      notifiedAt: params.notification.notifiedAt || new Date(),
+      receiptId: params.notification.receiptId,
+    } : undefined,
+    conversationId: params.conversationId,
+    requestContext: params.requestContext,
+  };
+
+  return await logger.log(
+    'REFUSAL_EVENT',
+    'WARNING',
+    params.actor,
+    'REFUSE_REQUEST',
+    'SUCCESS',
+    {
+      target: params.conversationId ? {
+        type: 'Conversation',
+        id: params.conversationId,
+      } : undefined,
+      details,
+      metadata: {
+        refusalType: params.refusalType,
+        rightsImpacted: params.rightsImpacted,
+        receiptId: params.receiptId,
+      },
+    }
+  );
+}
+
+/**
+ * Helper function to log human oversight actions
+ */
+export async function logHumanOversightAction(params: {
+  actor: AuditActor;
+  actionType: import('./oversight-taxonomy').OversightActionType;
+  target: {
+    type: string;
+    id: string;
+    description?: string;
+  };
+  rationale: string;
+  impact: {
+    level: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+    affectedSystems?: string[];
+  };
+  rightsImpacted?: string[];
+  attachments?: Array<{
+    type: string;
+    reference: string;
+    description?: string;
+  }>;
+  reviewedBy?: {
+    id: string;
+    role: string;
+    credentials?: string[];
+  };
+}): Promise<SignedAuditEntry> {
+  const logger = getEnhancedAuditLogger();
+  
+  const details: import('./oversight-taxonomy').OversightActionDetails = {
+    actionType: params.actionType,
+    target: params.target,
+    rationale: params.rationale,
+    impact: params.impact,
+    rightsImpacted: params.rightsImpacted,
+    attachments: params.attachments,
+    reviewedBy: params.reviewedBy,
+  };
+
+  // Map impact level to severity
+  const severityMap: Record<string, AuditSeverity> = {
+    low: 'INFO',
+    medium: 'WARNING',
+    high: 'ERROR',
+    critical: 'CRITICAL',
+  };
+
+  return await logger.log(
+    'HUMAN_OVERSIGHT_ACTION',
+    severityMap[params.impact.level],
+    params.actor,
+    `OVERSIGHT_${params.actionType.toUpperCase()}`,
+    'SUCCESS',
+    {
+      target: {
+        type: params.target.type,
+        id: params.target.id,
+        attributes: params.target.description ? { description: params.target.description } : undefined,
+      },
+      details,
+      metadata: {
+        actionType: params.actionType,
+        impactLevel: params.impact.level,
+        rightsImpacted: params.rightsImpacted,
+      },
+    }
+  );
+}
+
+/**
+ * Verify the integrity of the audit log
+ * Convenience function that uses the global enhanced logger
+ */
+export async function verifyAuditIntegrity(): Promise<AuditIntegrityResult> {
+  const logger = getEnhancedAuditLogger();
+  return await logger.verifyIntegrity();
+}
