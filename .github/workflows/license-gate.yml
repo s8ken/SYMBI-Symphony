@@ -1,0 +1,180 @@
+name: License Policy Enforcement
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: read
+
+jobs:
+  license-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install license-checker
+        run: npm install -g license-checker
+
+      - name: Check for license exception label
+        id: check-label
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const hasException = labels.includes('license-exception');
+            core.setOutput('has-exception', hasException);
+            console.log(`License exception label present: ${hasException}`);
+            return hasException;
+
+      - name: Load license allowlist
+        id: allowlist
+        run: |
+          ALLOWED=$(cat licenses-allowlist.json | jq -r '.allowedLicenses | join(";")')
+          echo "allowed=$ALLOWED" >> $GITHUB_OUTPUT
+          echo "Allowed licenses: $ALLOWED"
+
+      - name: Generate license report
+        run: |
+          license-checker --json --out license-report.json || true
+          echo "✅ License report generated"
+
+      - name: Check licenses against allowlist
+        id: check
+        run: |
+          node -e "
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('license-report.json', 'utf8'));
+          const allowlist = JSON.parse(fs.readFileSync('licenses-allowlist.json', 'utf8'));
+          const allowed = allowlist.allowedLicenses;
+          
+          const violations = [];
+          
+          for (const [pkg, info] of Object.entries(report)) {
+            const licenses = info.licenses;
+            if (!licenses) continue;
+            
+            // Handle SPDX expressions and arrays
+            const licenseList = Array.isArray(licenses) ? licenses : [licenses];
+            const hasAllowed = licenseList.some(lic => {
+              // Check if any part of OR expression is allowed
+              const parts = lic.split(' OR ').map(p => p.trim().replace(/[()]/g, ''));
+              return parts.some(p => allowed.includes(p));
+            });
+            
+            if (!hasAllowed) {
+              violations.push({
+                package: pkg,
+                licenses: licenses,
+                repository: info.repository || 'N/A'
+              });
+            }
+          }
+          
+          if (violations.length > 0) {
+            console.log('❌ License violations found:');
+            violations.forEach(v => {
+              console.log(\`  - \${v.package}: \${v.licenses}\`);
+            });
+            
+            fs.writeFileSync('violations.json', JSON.stringify(violations, null, 2));
+            process.exit(1);
+          } else {
+            console.log('✅ All dependencies use allowed licenses');
+            process.exit(0);
+          }
+          " && echo "status=pass" >> $GITHUB_OUTPUT || echo "status=fail" >> $GITHUB_OUTPUT
+
+      - name: Upload license report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: |
+            license-report.json
+            violations.json
+          retention-days: 30
+
+      - name: Comment on PR with violations
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            if (!fs.existsSync('violations.json')) {
+              return;
+            }
+            
+            const violations = JSON.parse(fs.readFileSync('violations.json', 'utf8'));
+            const hasException = '${{ steps.check-label.outputs.has-exception }}' === 'true';
+            
+            let comment = '## ⚠️ License Policy Violations\n\n';
+            comment += `Found ${violations.length} dependencies with non-allowed licenses:\n\n`;
+            comment += '| Package | License | Repository |\n';
+            comment += '|---------|---------|------------|\n';
+            
+            violations.forEach(v => {
+              comment += `| \`${v.package}\` | ${v.licenses} | ${v.repository} |\n`;
+            });
+            
+            comment += '\n### Allowed Licenses\n';
+            const allowlist = JSON.parse(fs.readFileSync('licenses-allowlist.json', 'utf8'));
+            comment += allowlist.allowedLicenses.map(l => `- ${l}`).join('\n');
+            
+            comment += '\n\n### Resolution\n';
+            if (hasException) {
+              comment += '✅ This PR has the `license-exception` label and can proceed.\n';
+            } else {
+              comment += '❌ This PR will be blocked. To proceed:\n';
+              comment += '1. Remove or replace dependencies with non-allowed licenses, OR\n';
+              comment += '2. Add `license-exception` label if the risk is accepted\n';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Check if exception label allows bypass
+        if: failure() && github.event_name == 'pull_request'
+        run: |
+          if [ "${{ steps.check-label.outputs.has-exception }}" == "true" ]; then
+            echo "⚠️ License violations present, but license-exception label allows bypass"
+            exit 0
+          else
+            echo "❌ License violations detected and no exception label present"
+            exit 1
+          fi
+
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## License Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check.outputs.status }}" == "pass" ]; then
+            echo "✅ All dependencies use allowed licenses" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ License violations detected" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ steps.check-label.outputs.has-exception }}" == "true" ]; then
+              echo "⚠️ Bypassed with license-exception label" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi

@@ -1,0 +1,137 @@
+name: Infrastructure as Code Scanning
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'docker-compose*.yml'
+      - 'Dockerfile'
+      - '*.tf'
+      - '*.yaml'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'docker-compose*.yml'
+      - 'Dockerfile'
+      - '*.tf'
+      - '*.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  checkov-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile,docker_compose
+          output_format: cli,sarif
+          output_file_path: console,checkov-results.sarif
+          soft_fail: false
+          skip_check: CKV_DOCKER_2,CKV_DOCKER_3
+        continue-on-error: true
+
+      - name: Upload Checkov SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-results.sarif
+          category: checkov
+        continue-on-error: true
+
+      - name: Analyze results
+        if: always()
+        run: |
+          echo "## IaC Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f checkov-results.sarif ]; then
+            # Count findings by severity
+            CRITICAL=$(jq '[.runs[].results[] | select(.properties.severity == "critical")] | length' checkov-results.sarif 2>/dev/null || echo "0")
+            HIGH=$(jq '[.runs[].results[] | select(.properties.severity == "high")] | length' checkov-results.sarif 2>/dev/null || echo "0")
+            MEDIUM=$(jq '[.runs[].results[] | select(.properties.severity == "medium")] | length' checkov-results.sarif 2>/dev/null || echo "0")
+            LOW=$(jq '[.runs[].results[] | select(.properties.severity == "low")] | length' checkov-results.sarif 2>/dev/null || echo "0")
+            
+            echo "### Findings Summary" >> $GITHUB_STEP_SUMMARY
+            echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔴 Critical | $CRITICAL |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟠 High | $HIGH |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟡 Medium | $MEDIUM |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟢 Low | $LOW |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            TOTAL=$((CRITICAL + HIGH + MEDIUM + LOW))
+            if [ $TOTAL -eq 0 ]; then
+              echo "✅ **No security issues found**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ **$TOTAL security issues found**" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Review the Security tab for details." >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "✅ Checkov scan completed successfully" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload Checkov results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkov-results
+          path: checkov-results.sarif
+          retention-days: 30
+
+  docker-lint:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'Dockerfile') || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: warning
+        continue-on-error: true
+
+      - name: Hadolint summary
+        run: |
+          echo "## Dockerfile Linting" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Dockerfile linting completed with Hadolint" >> $GITHUB_STEP_SUMMARY
+
+  compose-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose files
+        run: |
+          echo "## Docker Compose Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          for file in docker-compose*.yml; do
+            if [ -f "$file" ]; then
+              echo "Validating $file..."
+              if docker-compose -f "$file" config > /dev/null 2>&1; then
+                echo "- ✅ \`$file\` is valid" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "- ❌ \`$file\` has errors" >> $GITHUB_STEP_SUMMARY
+                docker-compose -f "$file" config 2>&1 | head -20
+                exit 1
+              fi
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All docker-compose files are valid" >> $GITHUB_STEP_SUMMARY

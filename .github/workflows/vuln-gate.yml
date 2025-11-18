@@ -1,0 +1,159 @@
+name: Vulnerability Severity Gating
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  security-events: write
+
+jobs:
+  scan-vulnerabilities:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Create SARIF directory
+        run: mkdir -p sarif-reports
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'sarif-reports/trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+
+      - name: Run npm audit
+        run: |
+          npm audit --json > sarif-reports/npm-audit.json || true
+          echo "✅ NPM audit completed"
+
+      - name: Convert npm audit to SARIF
+        run: |
+          node -e "
+          const fs = require('fs');
+          const audit = JSON.parse(fs.readFileSync('sarif-reports/npm-audit.json', 'utf8'));
+          
+          const sarif = {
+            version: '2.1.0',
+            \$schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
+            runs: [{
+              tool: {
+                driver: {
+                  name: 'npm-audit',
+                  version: '1.0.0',
+                  informationUri: 'https://docs.npmjs.com/cli/v8/commands/npm-audit'
+                }
+              },
+              results: []
+            }]
+          };
+          
+          if (audit.vulnerabilities) {
+            for (const [pkg, vuln] of Object.entries(audit.vulnerabilities)) {
+              const severity = vuln.severity?.toUpperCase() || 'MEDIUM';
+              const level = ['CRITICAL', 'HIGH'].includes(severity) ? 'error' : 'warning';
+              
+              sarif.runs[0].results.push({
+                ruleId: \`npm-audit/\${pkg}\`,
+                level: level,
+                message: {
+                  text: \`\${vuln.via?.[0]?.title || 'Vulnerability'} in \${pkg}\`
+                },
+                properties: {
+                  severity: severity.toLowerCase(),
+                  'security-severity': severity === 'CRITICAL' ? '9.0' : severity === 'HIGH' ? '7.0' : '5.0'
+                }
+              });
+            }
+          }
+          
+          fs.writeFileSync('sarif-reports/npm-audit.sarif', JSON.stringify(sarif, null, 2));
+          " || true
+
+      - name: Upload Trivy SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'sarif-reports/trivy-results.sarif'
+          category: 'trivy'
+        continue-on-error: true
+
+      - name: Upload npm audit SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'sarif-reports/npm-audit.sarif'
+          category: 'npm-audit'
+        continue-on-error: true
+
+      - name: Check for security-risk-accepted label
+        id: check-label
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const hasException = labels.includes('security-risk-accepted');
+            core.setOutput('has-exception', hasException);
+            console.log(`Security risk accepted label present: ${hasException}`);
+            return hasException;
+
+      - name: Parse vulnerability severity
+        id: parse
+        run: |
+          node scripts/parse-sarif-severity.js
+        continue-on-error: true
+
+      - name: Upload SARIF reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sarif-reports
+          path: sarif-reports/
+          retention-days: 30
+
+      - name: Evaluate result
+        if: steps.parse.outcome == 'failure'
+        run: |
+          HAS_EXCEPTION="${{ steps.check-label.outputs.has-exception }}"
+          
+          if [ "$HAS_EXCEPTION" == "true" ]; then
+            echo "⚠️ HIGH/CRITICAL vulnerabilities found, but security-risk-accepted label allows bypass"
+            echo "## Vulnerability Gate - BYPASSED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ This PR has HIGH or CRITICAL vulnerabilities but is bypassed with \`security-risk-accepted\` label" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          else
+            echo "❌ HIGH/CRITICAL vulnerabilities found and no exception label present"
+            echo "## Vulnerability Gate - FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ This PR has HIGH or CRITICAL vulnerabilities" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "To proceed:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Fix the vulnerabilities, OR" >> $GITHUB_STEP_SUMMARY
+            echo "2. Add \`security-risk-accepted\` label if the risk is accepted" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Success summary
+        if: steps.parse.outcome == 'success'
+        run: |
+          echo "## Vulnerability Gate - PASSED" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ No HIGH or CRITICAL vulnerabilities found" >> $GITHUB_STEP_SUMMARY

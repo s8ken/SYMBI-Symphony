@@ -1,0 +1,97 @@
+name: Lockfile Integrity Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'package-lock.json'
+      - 'poetry.lock'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  verify-lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Check for dependency update label
+        id: check-label
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const hasDependencyUpdate = labels.includes('dependency-update');
+            core.setOutput('has-dependency-update', hasDependencyUpdate);
+            console.log(`Dependency update label present: ${hasDependencyUpdate}`);
+            return hasDependencyUpdate;
+
+      - name: Check commit message for chore(deps)
+        id: check-commit
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if echo "$COMMIT_MSG" | grep -q "chore(deps)"; then
+            echo "has-deps-commit=true" >> $GITHUB_OUTPUT
+            echo "✅ Commit message contains chore(deps)"
+          else
+            echo "has-deps-commit=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Commit message does not contain chore(deps)"
+          fi
+
+      - name: Run lockfile integrity check
+        id: verify
+        run: |
+          node scripts/verify-lock-integrity.js
+        continue-on-error: true
+
+      - name: Evaluate result
+        if: steps.verify.outcome == 'failure'
+        run: |
+          HAS_LABEL="${{ steps.check-label.outputs.has-dependency-update }}"
+          HAS_COMMIT="${{ steps.check-commit.outputs.has-deps-commit }}"
+          
+          echo "## Lockfile Integrity Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "❌ Lockfile checksum mismatch detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$HAS_LABEL" == "true" ] || [ "$HAS_COMMIT" == "true" ]; then
+            echo "✅ **Bypass conditions met:**" >> $GITHUB_STEP_SUMMARY
+            if [ "$HAS_LABEL" == "true" ]; then
+              echo "- PR has \`dependency-update\` label" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ "$HAS_COMMIT" == "true" ]; then
+              echo "- Commit message contains \`chore(deps)\`" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ Remember to update LOCKFILE_CHECKSUMS.json before merging!" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          else
+            echo "❌ **No bypass conditions met**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "To proceed, either:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Add \`dependency-update\` label to this PR" >> $GITHUB_STEP_SUMMARY
+            echo "2. Use commit message format: \`chore(deps): ...\`" >> $GITHUB_STEP_SUMMARY
+            echo "3. Update LOCKFILE_CHECKSUMS.json with new checksums" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Success summary
+        if: steps.verify.outcome == 'success'
+        run: |
+          echo "## Lockfile Integrity Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All lockfile checksums verified successfully" >> $GITHUB_STEP_SUMMARY

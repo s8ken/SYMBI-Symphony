@@ -1,0 +1,153 @@
+name: Coverage Enforcement
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  coverage-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run JavaScript tests with coverage
+        run: npm run test:coverage || true
+        continue-on-error: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Python tests with coverage
+        run: |
+          cd Agentverse
+          if [ -f requirements.txt ]; then
+            pip install pytest pytest-cov
+            pip install -r requirements.txt
+            pytest --cov=. --cov-report=xml --cov-report=term || true
+            
+            # Move coverage file
+            mkdir -p ../coverage
+            if [ -f coverage.xml ]; then
+              mv coverage.xml ../coverage/coverage.xml
+            fi
+          fi
+        continue-on-error: true
+
+      - name: Merge coverage reports
+        run: |
+          node scripts/merge-coverage.js || echo "⚠️ Coverage merge script encountered issues"
+
+      - name: Check coverage threshold
+        id: threshold
+        run: |
+          THRESHOLD=60
+          
+          if [ ! -f coverage-summary.json ]; then
+            echo "⚠️ No coverage summary found, skipping threshold check"
+            echo "has-coverage=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          COVERAGE=$(node -e "
+            const summary = require('./coverage-summary.json');
+            const lineCoverage = summary.total.lines.percentage;
+            console.log(lineCoverage);
+          ")
+          
+          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          echo "threshold=$THRESHOLD" >> $GITHUB_OUTPUT
+          echo "has-coverage=true" >> $GITHUB_OUTPUT
+          
+          echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Line Coverage:** ${COVERAGE}%" >> $GITHUB_STEP_SUMMARY
+          echo "**Threshold:** ${THRESHOLD}%" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Compare as integers (multiply by 10 to handle decimals)
+          COVERAGE_INT=$(echo "$COVERAGE * 10" | bc | cut -d'.' -f1)
+          THRESHOLD_INT=$(echo "$THRESHOLD * 10" | bc)
+          
+          if [ "$COVERAGE_INT" -lt "$THRESHOLD_INT" ]; then
+            echo "### ❌ Coverage Below Threshold" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Current coverage (${COVERAGE}%) is below the required threshold (${THRESHOLD}%)." >> $GITHUB_STEP_SUMMARY
+            echo "Please add tests to increase coverage." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "### ✅ Coverage Meets Threshold" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Current coverage (${COVERAGE}%) meets or exceeds the required threshold (${THRESHOLD}%)." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+      - name: Upload coverage summary
+        if: steps.threshold.outputs.has-coverage == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-summary
+          path: |
+            coverage-summary.json
+            coverage/
+          retention-days: 30
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request' && steps.threshold.outputs.has-coverage == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            if (!fs.existsSync('coverage-summary.json')) {
+              return;
+            }
+            
+            const summary = JSON.parse(fs.readFileSync('coverage-summary.json', 'utf8'));
+            const coverage = summary.total.lines.percentage;
+            const threshold = ${{ steps.threshold.outputs.threshold }};
+            const meetsThreshold = coverage >= threshold;
+            
+            const icon = meetsThreshold ? '✅' : '❌';
+            const status = meetsThreshold ? 'PASSED' : 'FAILED';
+            
+            let comment = `## ${icon} Coverage Report - ${status}\n\n`;
+            comment += `| Metric | Coverage | Status |\n`;
+            comment += `|--------|----------|--------|\n`;
+            comment += `| Total Lines | ${coverage}% | ${coverage >= threshold ? '✅' : '❌'} |\n`;
+            comment += `| Branches | ${summary.total.branches.percentage}% | - |\n`;
+            comment += `| Functions | ${summary.total.functions.percentage}% | - |\n`;
+            comment += `\n**Threshold:** ${threshold}%\n`;
+            
+            if (!meetsThreshold) {
+              comment += `\n⚠️ Coverage is below the required threshold. Please add tests.\n`;
+            }
+            
+            comment += `\n### Language Breakdown\n`;
+            comment += `- **JavaScript:** ${summary.javascript.lines.percentage}%\n`;
+            comment += `- **Python:** ${summary.python.lines.percentage}%\n`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

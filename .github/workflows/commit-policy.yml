@@ -1,0 +1,199 @@
+name: Commit Policy Enforcement
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [ opened, synchronize, reopened ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install commitlint
+        run: |
+          npm install --save-dev @commitlint/cli@18.4.0 @commitlint/config-conventional@18.4.0
+
+      - name: Validate commit messages
+        run: |
+          echo "Checking commits in PR..."
+          COMMITS=$(git log --pretty=format:"%H %s" origin/${{ github.base_ref }}..HEAD)
+          
+          echo "## Commit Message Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          FAILED=0
+          while IFS= read -r line; do
+            HASH=$(echo "$line" | cut -d' ' -f1)
+            MSG=$(echo "$line" | cut -d' ' -f2-)
+            
+            echo "Checking: $MSG"
+            
+            # Skip merge commits
+            if echo "$MSG" | grep -q "^Merge"; then
+              echo "  ℹ️ Skipping merge commit"
+              continue
+            fi
+            
+            # Check conventional commit format
+            if ! echo "$MSG" | npx commitlint --config commitlint.config.cjs 2>&1; then
+              echo "  ❌ Invalid commit message format"
+              echo "- ❌ \`$HASH\`: $MSG" >> $GITHUB_STEP_SUMMARY
+              FAILED=1
+            else
+              echo "  ✅ Valid commit message"
+              echo "- ✅ \`$HASH\`: $MSG" >> $GITHUB_STEP_SUMMARY
+            fi
+          done <<< "$COMMITS"
+          
+          if [ $FAILED -eq 1 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Commit Message Format" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Commits must follow the Conventional Commits format:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "type(scope): Subject" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Optional body" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Optional footer" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Types:** feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert" >> $GITHUB_STEP_SUMMARY
+            echo "**Scopes:** core, agent, infra, security, deps, ui, api, ci, docs, test" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+  verify-signatures:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for unsigned-override label
+        id: check-label
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const hasOverride = labels.includes('unsigned-override');
+            core.setOutput('has-override', hasOverride);
+            console.log(`Unsigned override label present: ${hasOverride}`);
+            return hasOverride;
+
+      - name: Verify commit signatures
+        id: verify
+        run: |
+          echo "## Commit Signature Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Get commits in PR
+          COMMITS=$(git log --pretty=format:"%H" origin/${{ github.base_ref }}..HEAD)
+          
+          UNSIGNED=0
+          TOTAL=0
+          
+          for COMMIT in $COMMITS; do
+            TOTAL=$((TOTAL + 1))
+            
+            # Get commit info
+            SUBJECT=$(git log -1 --pretty=format:"%s" $COMMIT)
+            AUTHOR=$(git log -1 --pretty=format:"%an" $COMMIT)
+            
+            # Skip merge commits
+            if echo "$SUBJECT" | grep -q "^Merge"; then
+              echo "- ℹ️ \`$COMMIT\`: Skipped merge commit" >> $GITHUB_STEP_SUMMARY
+              continue
+            fi
+            
+            # Check signature status
+            SIG_STATUS=$(git log -1 --pretty=format:"%G?" $COMMIT)
+            
+            case "$SIG_STATUS" in
+              G)
+                echo "- ✅ \`$COMMIT\`: Valid signature by $AUTHOR" >> $GITHUB_STEP_SUMMARY
+                ;;
+              B)
+                echo "- ⚠️ \`$COMMIT\`: Bad signature by $AUTHOR" >> $GITHUB_STEP_SUMMARY
+                UNSIGNED=$((UNSIGNED + 1))
+                ;;
+              U)
+                echo "- ❌ \`$COMMIT\`: Unsigned commit by $AUTHOR" >> $GITHUB_STEP_SUMMARY
+                UNSIGNED=$((UNSIGNED + 1))
+                ;;
+              X)
+                echo "- ⚠️ \`$COMMIT\`: Expired signature by $AUTHOR" >> $GITHUB_STEP_SUMMARY
+                UNSIGNED=$((UNSIGNED + 1))
+                ;;
+              Y)
+                echo "- ⚠️ \`$COMMIT\`: Expired key signature by $AUTHOR" >> $GITHUB_STEP_SUMMARY
+                UNSIGNED=$((UNSIGNED + 1))
+                ;;
+              R)
+                echo "- ⚠️ \`$COMMIT\`: Revoked signature by $AUTHOR" >> $GITHUB_STEP_SUMMARY
+                UNSIGNED=$((UNSIGNED + 1))
+                ;;
+              *)
+                echo "- ❌ \`$COMMIT\`: Unknown signature status by $AUTHOR" >> $GITHUB_STEP_SUMMARY
+                UNSIGNED=$((UNSIGNED + 1))
+                ;;
+            esac
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Summary:** $((TOTAL - UNSIGNED))/$TOTAL commits signed" >> $GITHUB_STEP_SUMMARY
+          
+          if [ $UNSIGNED -gt 0 ]; then
+            echo "has-unsigned=true" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "has-unsigned=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+        continue-on-error: true
+
+      - name: Evaluate result
+        if: steps.verify.outputs.has-unsigned == 'true'
+        run: |
+          HAS_OVERRIDE="${{ steps.check-label.outputs.has-override }}"
+          
+          if [ "$HAS_OVERRIDE" == "true" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ **Unsigned commits detected, but bypassed with \`unsigned-override\` label**" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Unsigned commits found, but unsigned-override label allows bypass"
+            exit 0
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ❌ Unsigned Commits Detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All commits must be signed. To proceed:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Sign your commits with GPG or SSH" >> $GITHUB_STEP_SUMMARY
+            echo "2. Add \`unsigned-override\` label if unsigned commits are acceptable" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "See: https://docs.github.com/en/authentication/managing-commit-signature-verification" >> $GITHUB_STEP_SUMMARY
+            echo "❌ Unsigned commits detected and no override label present"
+            exit 1
+          fi
+
+      - name: Success summary
+        if: steps.verify.outputs.has-unsigned == 'false'
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All commits are properly signed" >> $GITHUB_STEP_SUMMARY
