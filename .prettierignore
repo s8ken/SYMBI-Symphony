@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Vendored/external code
+Agentverse/ui/src/phaser3-rex-plugins/
+SYMBI SYNERGY/
+SYMBI SYNERGY_backup_*/
+
+# Large generated files
+*.min.js
+*.bundle.js
+
+# Binary files
+*.tgz
+*.tar.gz
+*.zip
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Data files
+data/

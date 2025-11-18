@@ -1,0 +1,154 @@
+version: '3.8'
+
+# Enterprise Docker Compose Configuration
+# This configuration includes backend services, optional data stores,
+# and agent orchestration for production-like deployments.
+#
+# Usage:
+#   docker-compose -f docker-compose.enterprise.yml up
+#
+# Environment:
+#   Copy .env.example to .env and configure for your environment
+
+services:
+  # SYMBI Symphony Backend Service
+  symbi-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_VERSION: "20"
+    image: symbi-symphony:latest
+    container_name: symbi-backend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-5001}:${PORT:-5001}"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PORT:-5001}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      # DID Configuration
+      - ENABLE_DID_ETHR=${ENABLE_DID_ETHR:-false}
+      - ENABLE_DID_ION=${ENABLE_DID_ION:-false}
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL:-}
+      # Redis Configuration (if enabled)
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      # MongoDB Configuration (if enabled)
+      - MONGODB_URL=${MONGODB_URL:-mongodb://mongo:27017/symbi}
+      # KMS Configuration (use production KMS in real deployments)
+      - KMS_PROVIDER=${KMS_PROVIDER:-local}
+      - AWS_REGION=${AWS_REGION:-}
+      - AWS_KMS_KEY_ID=${AWS_KMS_KEY_ID:-}
+      # Audit Configuration
+      - AUDIT_STORAGE_BACKEND=${AUDIT_STORAGE_BACKEND:-file}
+      - AUDIT_LOG_PATH=${AUDIT_LOG_PATH:-/data/audit}
+    volumes:
+      - symbi-data:/data
+      - symbi-logs:/logs
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:${PORT:-5001}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - symbi-network
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: symbi-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - symbi-network
+    command: >
+      --requirepass ${REDIS_PASSWORD:-changeme}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+
+  # MongoDB for persistent storage
+  mongo:
+    image: mongo:7
+    container_name: symbi-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-changeme}
+      - MONGO_INITDB_DATABASE=symbi
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - symbi-network
+
+  # Optional: OpenTelemetry Collector for observability
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: symbi-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "13133:13133" # Health check
+    networks:
+      - symbi-network
+    profiles:
+      - observability
+
+  # Optional: Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: symbi-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "14268:14268" # Jaeger collector
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - symbi-network
+    profiles:
+      - observability
+
+networks:
+  symbi-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+volumes:
+  symbi-data:
+    driver: local
+  symbi-logs:
+    driver: local
+  redis-data:
+    driver: local
+  mongo-data:
+    driver: local
+  mongo-config:
+    driver: local

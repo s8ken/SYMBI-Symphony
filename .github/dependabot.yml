@@ -1,0 +1,85 @@
+version: 2
+updates:
+  # Root npm packages
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "npm"
+    groups:
+      typescript-eslint:
+        patterns:
+          - "@typescript-eslint/*"
+      types:
+        patterns:
+          - "@types/*"
+
+  # Agentverse UI
+  - package-ecosystem: "npm"
+    directory: "/Agentverse/ui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "agentverse"
+
+  # Agentverse Executor
+  - package-ecosystem: "npm"
+    directory: "/Agentverse/symbi-executor"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "agentverse"
+
+  # Core Agent
+  - package-ecosystem: "npm"
+    directory: "/core/agent"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "core"
+
+  # Tactical Command
+  - package-ecosystem: "npm"
+    directory: "/Tactical Command"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "tactical-command"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"

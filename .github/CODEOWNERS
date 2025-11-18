@@ -1,0 +1,32 @@
+# CODEOWNERS - Define code ownership for automated review requests
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+* @s8ken
+
+# Core trust protocol and infrastructure
+/src/core/ @s8ken
+/core/ @s8ken
+
+# Workflows and CI/CD
+/.github/ @s8ken
+/.github/workflows/ @s8ken
+
+# Agentverse components
+/Agentverse/ @s8ken
+
+# Tactical Command
+/Tactical Command/ @s8ken
+
+# Security and compliance files
+/SECURITY.md @s8ken
+/CODEOWNERS @s8ken
+/.github/dependabot.yml @s8ken
+
+# Docker and infrastructure
+Dockerfile @s8ken
+docker-compose*.yml @s8ken
+
+# Documentation
+/docs/ @s8ken
+README.md @s8ken

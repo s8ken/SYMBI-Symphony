@@ -1,0 +1,61 @@
+name: SBOM Generation
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  generate-sbom:
+    name: Generate Software Bill of Materials
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0.15.8
+
+      - name: Generate SPDX SBOM
+        run: |
+          syft dir:. -o spdx-json=sbom-spdx.json
+          
+      - name: Generate CycloneDX SBOM
+        run: |
+          syft dir:. -o cyclonedx-json=sbom-cyclonedx.json
+
+      - name: Upload SPDX SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-spdx
+          path: sbom-spdx.json
+          retention-days: 90
+
+      - name: Upload CycloneDX SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx
+          path: sbom-cyclonedx.json
+          retention-days: 90
+
+      - name: Attach SBOM to Release (on main push)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          echo "SBOM artifacts generated and uploaded"
+          echo "To attach to a release, use the GitHub UI or API"

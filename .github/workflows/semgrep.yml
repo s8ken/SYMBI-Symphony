@@ -1,0 +1,56 @@
+name: Semgrep Security Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 0 * * 1' # Weekly on Mondays
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  semgrep:
+    name: Semgrep Security Scan
+    runs-on: ubuntu-latest
+    
+    container:
+      image: returntocorp/semgrep
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config=auto \
+            --sarif \
+            --output=semgrep-results.sarif \
+            --severity=ERROR \
+            --severity=WARNING
+
+      - name: Upload Semgrep results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep-results.sarif
+          category: 'semgrep'
+
+      - name: Run Semgrep secrets scan
+        run: |
+          semgrep scan \
+            --config "p/secrets" \
+            --sarif \
+            --output=semgrep-secrets.sarif
+
+      - name: Upload Semgrep secrets results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep-secrets.sarif
+          category: 'semgrep-secrets'
