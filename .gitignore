@@ -83,6 +83,9 @@ Tactical Command/lib/
 !jest.config.js
 !debug-*.js
 !*.test.js
+!scripts/*.js
+!.eslintrc.js
+!commitlint.config.cjs
 
 # Local KMS storage (never commit keys!)
 kms-store/
