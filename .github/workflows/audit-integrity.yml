@@ -1,0 +1,45 @@
+name: Audit Integrity Check
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  audit-integrity:
+    name: Verify Audit Log Integrity
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+        continue-on-error: true
+
+      - name: Run audit tests
+        run: npx jest src/core/trust/audit/__tests__/audit-oversight-refusal.test.ts --no-coverage
+        continue-on-error: true
+
+      - name: Run audit integrity verification
+        run: npm run audit:integrity
+        env:
+          AUDIT_STORAGE_BACKEND: memory
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: coverage/

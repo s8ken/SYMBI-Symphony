@@ -88,17 +88,22 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/src",
-      "<rootDir>/tests"
+      "<rootDir>"
     ],
     "testMatch": [
-      "**/__tests__/**/*.ts",
-      "**/?(*.)+(spec|test).ts"
+      "<rootDir>/tests/**/*.test.ts",
+      "<rootDir>/**/__tests__/**/*.ts"
     ],
     "collectCoverageFrom": [
-      "src/**/*.ts",
-      "!src/**/*.d.ts",
-      "!src/examples/**/*"
+      "**/*.ts",
+      "!**/*.d.ts",
+      "!**/node_modules/**",
+      "!**/dist/**",
+      "!**/coverage/**",
+      "!**/tests/**",
+      "!**/examples/**",
+      "!jest.config.js",
+      "!**/*.config.ts"
     ],
     "coverageDirectory": "coverage",
     "coverageReporters": [

@@ -71,6 +71,19 @@ credentials/
 .npm
 .eslintcache
 
+# Audit logs
+.audit-log
+audit-*.json
+
+# Tactical Command build artifacts
+Tactical Command/lib/
+*.js
+*.js.map
+*.d.ts
+!jest.config.js
+!debug-*.js
+!*.test.js
+
 # Local KMS storage (never commit keys!)
 kms-store/
 .kms/

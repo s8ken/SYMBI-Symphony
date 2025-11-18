@@ -35,6 +35,7 @@
     "clean": "rimraf dist",
     "security:scan": "npm audit && snyk test",
     "docs:api": "typedoc --out docs/api src/core",
+    "audit:integrity": "tsx scripts/audit-integrity.ts",
     "pilot:enroll": "node dist/scripts/pilot/enroll.js",
     "pilot:issue": "node dist/scripts/pilot/issue.js",
     "pilot:verify": "node dist/scripts/pilot/verify.js",
@@ -79,6 +80,7 @@
     "rimraf": "^5.0.0",
     "snyk": "^1.1250.0",
     "ts-jest": "^29.1.0",
+    "tsx": "^4.20.6",
     "typedoc": "^0.25.0",
     "typescript": "^5.0.0",
     "ws": "^8.18.3"
