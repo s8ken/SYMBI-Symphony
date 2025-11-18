@@ -1,0 +1,64 @@
+# OpenTelemetry Collector Configuration
+# This is a basic configuration for local development and testing.
+# For production, customize based on your observability backend.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+  
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+
+exporters:
+  # Console exporter for debugging
+  logging:
+    loglevel: info
+  
+  # Uncomment and configure for your observability backend:
+  
+  # Jaeger exporter
+  # jaeger:
+  #   endpoint: jaeger:14250
+  #   tls:
+  #     insecure: true
+  
+  # Prometheus exporter
+  # prometheus:
+  #   endpoint: "0.0.0.0:8889"
+  
+  # OTLP exporter (generic)
+  # otlp:
+  #   endpoint: your-otlp-endpoint:4317
+  #   tls:
+  #     insecure: false
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging]
+    
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging]
+    
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging]
+  
+  telemetry:
+    logs:
+      level: info

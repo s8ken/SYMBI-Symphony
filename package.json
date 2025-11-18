@@ -27,6 +27,7 @@
     "test:trust": "jest --testPathPattern=trust --coverage",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:coverage:merge": "node scripts/merge-coverage.js",
     "test:vectors": "jest --testPathPattern=vectors",
     "test:interop": "jest --testPathPattern=interop",
     "test:properties": "jest --testPathPattern=properties",

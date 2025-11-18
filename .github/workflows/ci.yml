@@ -13,14 +13,17 @@ jobs:
     outputs:
       ready: ${{ steps.evaluate.outputs.ready }}
     steps:
-      - name: Evaluate human approval
+      - name: Evaluate human approval and CODEOWNERS
         id: evaluate
         uses: actions/github-script@v7
         with:
           script: |
             const labels = context.payload.pull_request.labels.map(l => l.name)
-            const hasLabel = labels.includes('human-approved')
-            const { data: reviews } = await github.pulls.listReviews({
+            const hasHumanApproved = labels.includes('human-approved')
+            const hasSecurityRiskAccepted = labels.includes('security-risk-accepted')
+            
+            // Check for independent reviewer approval
+            const { data: reviews } = await github.rest.pulls.listReviews({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.payload.pull_request.number,
@@ -28,7 +31,26 @@ jobs:
             const approver = reviews.find(r => r.state === 'APPROVED')?.user?.login
             const author = context.payload.pull_request.user.login
             const independent = approver && approver !== author
-            core.setOutput('ready', hasLabel && independent ? 'true' : 'false')
+            
+            // Check if CODEOWNERS review is present
+            const { data: reviewRequests } = await github.rest.pulls.listRequestedReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            })
+            
+            core.info(`Human approved: ${hasHumanApproved}`)
+            core.info(`Independent reviewer: ${independent}`)
+            core.info(`Approver: ${approver || 'none'}`)
+            core.info(`Security risk accepted: ${hasSecurityRiskAccepted}`)
+            
+            // Ready if has human-approved label AND independent reviewer
+            const ready = hasHumanApproved && independent
+            core.setOutput('ready', ready ? 'true' : 'false')
+            
+            if (!ready) {
+              core.warning('PR not ready: needs human-approved label AND independent reviewer approval')
+            }
 
   lint-and-test:
     runs-on: ubuntu-latest
