@@ -3,8 +3,13 @@
  * Integrates SYMBI Vault's TrustOracle with Tactical Command operations
  */
 
+<<<<<<< HEAD
 import { TrustOracle } from '../../SYMBI Vault/backend/core/trustOracle.js';
 import { TrustBond } from '../../SYMBI Vault/backend/models/TrustBond.js';
+=======
+import { TrustOracle } from '../stubs/trustOracle';
+import { TrustBond } from '../stubs/TrustBond';
+>>>>>>> origin/feature/symbi-vault-tactical-integration
 import { 
   TrustContext, 
   TrustResult, 
@@ -113,7 +118,11 @@ export class TrustOracleBridge {
       
     } catch (error) {
       console.error('Failed to update agent trust score:', error);
+<<<<<<< HEAD
       throw new Error(`Trust score update failed: ${error.message}`);
+=======
+      throw new Error(`Trust score update failed: ${(error as Error).message}`);
+>>>>>>> origin/feature/symbi-vault-tactical-integration
     }
   }
 
@@ -129,7 +138,11 @@ export class TrustOracleBridge {
       }
 
       const recentViolations = bond.violations.filter(
+<<<<<<< HEAD
         v => Date.now() - v.createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 // 30 days
+=======
+        (v: any) => Date.now() - v.createdAt.getTime() < 30 * 24 * 60 * 60 * 1000 // 30 days
+>>>>>>> origin/feature/symbi-vault-tactical-integration
       );
 
       const report: ComplianceReport = {
@@ -137,7 +150,11 @@ export class TrustOracleBridge {
         overallScore: bond.trustScore,
         trustBand: bond.trustBand,
         lastEvaluation: bond.history
+<<<<<<< HEAD
           .filter(h => h.action === 'score_updated')
+=======
+          .filter((h: any) => h.action === 'score_updated')
+>>>>>>> origin/feature/symbi-vault-tactical-integration
           .pop()?.at || new Date(),
         
         // Article-specific compliance
@@ -153,10 +170,17 @@ export class TrustOracleBridge {
         
         violationSummary: {
           total: bond.violations.length,
+<<<<<<< HEAD
           critical: bond.violations.filter(v => v.severity === 'critical').length,
           high: bond.violations.filter(v => v.severity === 'high').length,
           medium: bond.violations.filter(v => v.severity === 'medium').length,
           low: bond.violations.filter(v => v.severity === 'low').length,
+=======
+          critical: bond.violations.filter((v: any) => v.severity === 'critical').length,
+          high: bond.violations.filter((v: any) => v.severity === 'high').length,
+          medium: bond.violations.filter((v: any) => v.severity === 'medium').length,
+          low: bond.violations.filter((v: any) => v.severity === 'low').length,
+>>>>>>> origin/feature/symbi-vault-tactical-integration
           recent30Days: recentViolations.length
         },
         
@@ -184,11 +208,19 @@ export class TrustOracleBridge {
 
       // Check for recent violations
       const recentViolations = bond.violations.filter(
+<<<<<<< HEAD
         v => Date.now() - v.createdAt.getTime() < 24 * 60 * 60 * 1000 // 24 hours
       );
 
       // Generate alerts for critical violations
       recentViolations.forEach(violation => {
+=======
+        (v: any) => Date.now() - v.createdAt.getTime() < 24 * 60 * 60 * 1000 // 24 hours
+      );
+
+      // Generate alerts for critical violations
+      recentViolations.forEach((violation: any) => {
+>>>>>>> origin/feature/symbi-vault-tactical-integration
         if (violation.severity === 'critical' || violation.severity === 'high') {
           alerts.push({
             id: this.generateAlertId(),
@@ -377,7 +409,11 @@ export class TrustOracleBridge {
   }
 
   private getMaxViolationSeverity(violations: any[]): string {
+<<<<<<< HEAD
     const severityMap = { critical: 4, high: 3, medium: 2, low: 1 };
+=======
+    const severityMap: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+>>>>>>> origin/feature/symbi-vault-tactical-integration
     const maxSeverity = violations.reduce((max, v) => {
       return Math.max(max, severityMap[v.severity] || 0);
     }, 0);
@@ -444,7 +480,11 @@ export class TrustOracleBridge {
 
   private calculateArticleCompliance(bond: any, articleType: string): any {
     // Calculate compliance for specific constitutional article
+<<<<<<< HEAD
     const articleViolations = bond.violations.filter(v => 
+=======
+    const articleViolations = bond.violations.filter((v: any) =>
+>>>>>>> origin/feature/symbi-vault-tactical-integration
       v.description.toLowerCase().includes(articleType.toLowerCase())
     );
     
@@ -466,7 +506,11 @@ export class TrustOracleBridge {
       recommendations.push('Increased supervision required due to recent violations');
     }
     
+<<<<<<< HEAD
     if (bond.violations.some(v => v.severity === 'critical')) {
+=======
+    if (bond.violations.some((v: any) => v.severity === 'critical')) {
+>>>>>>> origin/feature/symbi-vault-tactical-integration
       recommendations.push('Immediate review required for critical violations');
     }
     
@@ -475,7 +519,11 @@ export class TrustOracleBridge {
 
   private calculateComplianceTrend(bond: any): any {
     const scoreHistory = bond.history
+<<<<<<< HEAD
       .filter(h => h.action === 'score_updated')
+=======
+      .filter((h: any) => h.action === 'score_updated')
+>>>>>>> origin/feature/symbi-vault-tactical-integration
       .slice(-7); // Last 7 evaluations
 
     if (scoreHistory.length < 2) {
@@ -497,20 +545,32 @@ export class TrustOracleBridge {
   }
 
   private getRecommendedActions(violation: any): string[] {
+<<<<<<< HEAD
     const actionMap = {
+=======
+    const actionMap: Record<string, string[]> = {
+>>>>>>> origin/feature/symbi-vault-tactical-integration
       'consent_violation': ['Review consent parameters', 'Update data handling policies'],
       'policy_breach': ['Review compliance guidelines', 'Implement additional safeguards'],
       'behavior_anomaly': ['Analyze behavior patterns', 'Consider retraining'],
       'constitutional_violation': ['Immediate review required', 'Suspend agent if critical']
     };
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> origin/feature/symbi-vault-tactical-integration
     return actionMap[violation.type] || ['Review violation details', 'Implement corrective actions'];
   }
 
   private calculateScoreTrend(bond: any): any {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const recentScore = bond.history
+<<<<<<< HEAD
       .filter(h => h.action === 'score_updated' && h.at >= weekAgo)
+=======
+      .filter((h: any) => h.action === 'score_updated' && h.at >= weekAgo)
+>>>>>>> origin/feature/symbi-vault-tactical-integration
       .pop();
 
     if (!recentScore) {
