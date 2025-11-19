@@ -3,6 +3,7 @@
  * Connects Symphony's SymbiOrchestrator with Tactical Command's SymbiIntegrationService
  */
 
+<<<<<<< HEAD
 import { SymbiOrchestrator } from '../core/agent/orchestrator.js';
 import { SymbiIntegrationService } from '../../Tactical Command/lib/services/symbi-integration.js';
 import { 
@@ -11,6 +12,22 @@ import {
   TrustValidatedTask,
   TaskResult,
   UnifiedAgentStatus
+=======
+import { AgentOrchestrator as SymbiOrchestrator } from '../stubs/orchestrator';
+import { SymbiAgentSpec } from '../stubs/symbi-integration';
+
+// Define SymbiIntegrationService interface locally for now
+interface SymbiIntegrationService {
+  initialize(): Promise<void>;
+}
+import {
+  UnifiedAgentConfig,
+  UnifiedMessage,
+  TrustValidatedTask,
+  TaskResult,
+  UnifiedAgentStatus,
+  TrustResult
+>>>>>>> origin/feature/symbi-vault-tactical-integration
 } from './types.js';
 import { TrustOracleBridge } from './trust-oracle-bridge.js';
 
@@ -37,11 +54,18 @@ export class UnifiedAgentOrchestrator {
       await this.symphonyOrchestrator.registerAgent({
         id: config.id,
         name: config.name,
+<<<<<<< HEAD
         type: config.type,
+=======
+>>>>>>> origin/feature/symbi-vault-tactical-integration
         capabilities: config.capabilities,
         permissions: config.permissions,
         metadata: {
           ...config.metadata,
+<<<<<<< HEAD
+=======
+          type: config.type,
+>>>>>>> origin/feature/symbi-vault-tactical-integration
           tacticalSpec: config.tacticalSpec
         }
       });
@@ -52,7 +76,11 @@ export class UnifiedAgentOrchestrator {
       console.log(`✅ Unified agent ${config.id} registered successfully`);
     } catch (error) {
       console.error(`❌ Failed to register unified agent ${config.id}:`, error);
+<<<<<<< HEAD
       throw new Error(`Unified agent registration failed: ${error.message}`);
+=======
+      throw new Error(`Unified agent registration failed: ${(error as Error).message}`);
+>>>>>>> origin/feature/symbi-vault-tactical-integration
     }
   }
 
@@ -160,9 +188,15 @@ export class UnifiedAgentOrchestrator {
 
     } catch (error) {
       console.error(`Task execution failed for ${task.id}:`, error);
+<<<<<<< HEAD
       
       // Record failure in trust evaluation
       const failureEvaluation = {
+=======
+
+      // Record failure in trust evaluation
+      const failureEvaluation: TrustResult = {
+>>>>>>> origin/feature/symbi-vault-tactical-integration
         id: `eval_${Date.now()}_failure`,
         timestamp: new Date(),
         score: 0,
@@ -174,7 +208,11 @@ export class UnifiedAgentOrchestrator {
           title: 'Task Execution Failure',
           severity: 'high',
           status: 'error',
+<<<<<<< HEAD
           reason: error.message
+=======
+          reason: (error as Error).message
+>>>>>>> origin/feature/symbi-vault-tactical-integration
         }],
         evidence: []
       };
@@ -189,7 +227,11 @@ export class UnifiedAgentOrchestrator {
         status: 'failed',
         result: null,
         trustEvaluation: failureEvaluation,
+<<<<<<< HEAD
         error: error.message
+=======
+        error: (error as Error).message
+>>>>>>> origin/feature/symbi-vault-tactical-integration
       };
     }
   }
@@ -218,7 +260,11 @@ export class UnifiedAgentOrchestrator {
 
     } catch (error) {
       console.error(`Failed to get unified status for agent ${agentId}:`, error);
+<<<<<<< HEAD
       throw new Error(`Unable to retrieve unified agent status: ${error.message}`);
+=======
+      throw new Error(`Unable to retrieve unified agent status: ${(error as Error).message}`);
+>>>>>>> origin/feature/symbi-vault-tactical-integration
     }
   }
 
