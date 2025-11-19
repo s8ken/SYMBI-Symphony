@@ -10,6 +10,12 @@ build/
 out/
 *.tsbuildinfo
 
+# Binary artifacts (added for enterprise hygiene)
+*.tgz
+*.tar.gz
+*.zip
+*.gz
+
 # Environment variables
 .env
 .env.local

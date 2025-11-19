@@ -14,11 +14,16 @@ We take the security of SYMBI Symphony seriously. If you discover a security vul
 - Potential impact
 - Suggested fix (if any)
 
-### Response Timeline
+### Response Timeline & SLA
 
-- **Initial Response:** Within 24 hours
-- **Status Update:** Within 72 hours
-- **Fix Timeline:** Critical vulnerabilities patched within 7 days
+We are committed to addressing security vulnerabilities promptly:
+
+| Severity | First Response | Fix Target | Public Disclosure |
+|----------|---------------|------------|-------------------|
+| Critical | 24 hours      | 7 days     | After fix release |
+| High     | 48 hours      | 14 days    | After fix release |
+| Medium   | 7 days        | 30 days    | After fix release |
+| Low      | 14 days       | 60 days    | After fix release |
 
 ### What to Expect
 
@@ -54,6 +59,39 @@ SYMBI Symphony is built with security as a core principle:
 
 ## Supported Versions
 
+We actively support and provide security updates for the following versions:
+
+| Version | Supported          |
+| ------- | ------------------ |
+| 0.1.x   | :white_check_mark: |
+
+## Enterprise Security Guarantees
+
+### Supply Chain Integrity
+
+SYMBI-Symphony implements comprehensive supply chain security measures:
+
+- **SBOM Generation**: Software Bill of Materials (SBOM) in both SPDX and CycloneDX formats generated for every release
+- **Vulnerability Scanning**: Multi-layer scanning using CodeQL, Semgrep, Trivy, and Grype
+- **Dependency Monitoring**: Automated weekly dependency updates via Dependabot
+- **License Compliance**: All dependencies verified against allowlist (MIT, Apache-2.0, BSD-2/3, ISC, CC0)
+- **Secret Scanning**: Automated detection of leaked credentials using TruffleHog and Gitleaks
+
+### Cryptographic Attestations & Provenance
+
+- **Container Signing**: All container images are signed using Cosign keyless signing
+- **SLSA Provenance**: Build provenance attestations available for all releases
+- **Artifact Integrity**: SHA256 checksums provided for all release artifacts
+
+### Dependency Update Cadence
+
+- **Critical Security Updates**: Within 24 hours of disclosure
+- **High Priority Updates**: Within 7 days
+- **Regular Updates**: Weekly automated checks via Dependabot
+- **Breaking Changes**: Evaluated quarterly with advance notice
+
+## Supported Versions
+
 | Version | Supported          |
 | ------- | ------------------ |
 | 0.1.x   | :white_check_mark: |
@@ -81,6 +119,24 @@ When using Symphony:
    - Use HTTPS for all DID resolution
    - Implement rate limiting
    - Monitor for suspicious activity
+
+5. **Regular Updates:**
+   - Keep dependencies updated regularly
+   - Run security scans before deploying
+   - Monitor security advisories
+
+## Security Scanning
+
+Run local security checks before committing:
+
+```bash
+npm run test:security
+```
+
+This runs:
+- npm audit for known vulnerabilities
+- Basic dependency checks
+- License compliance verification
 
 ## Dependencies
 

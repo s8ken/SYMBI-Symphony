@@ -1,0 +1,65 @@
+name: Commit Message Linting
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  commitlint:
+    name: Lint Commit Messages
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install commitlint
+        run: |
+          npm install -g @commitlint/cli @commitlint/config-conventional
+
+      - name: Validate commits
+        run: |
+          # Get all commits in the PR
+          COMMITS=$(git log --format=%H origin/${{ github.base_ref }}..HEAD)
+          
+          FAILED=0
+          for COMMIT in $COMMITS; do
+            MSG=$(git log --format=%B -n 1 $COMMIT)
+            
+            # Skip merge commits
+            if echo "$MSG" | grep -qE "^Merge (branch|pull request)"; then
+              echo "⏭️  Skipping merge commit: $COMMIT"
+              continue
+            fi
+            
+            # Check if commit follows conventional commits format
+            if ! echo "$MSG" | npx commitlint --verbose; then
+              echo "❌ Invalid commit message format: $COMMIT"
+              echo "Message: $MSG"
+              FAILED=1
+            else
+              echo "✅ Valid commit: $COMMIT"
+            fi
+          done
+          
+          if [ $FAILED -eq 1 ]; then
+            echo ""
+            echo "::error::Some commits do not follow Conventional Commits format"
+            echo "Expected format: <type>(<scope>): <subject>"
+            echo "Types: feat, fix, docs, style, refactor, perf, test, chore, ci, build, revert"
+            echo "Example: feat(auth): add OAuth2 support"
+            exit 1
+          fi
+          
+          echo "✅ All commits follow Conventional Commits format"
