@@ -72,8 +72,8 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "@types/jest": "^29.0.0",
-    "@types/node": "^20.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.10.1",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
