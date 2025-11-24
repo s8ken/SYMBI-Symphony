@@ -95,7 +95,7 @@
     "@aws-sdk/client-kms": "^3.490.0",
     "@ethersproject/contracts": "^5.8.0",
     "@ethersproject/providers": "^5.8.0",
-    "@google-cloud/kms": "^4.2.0",
+    "@google-cloud/kms": "^5.2.1",
     "@noble/ed25519": "^3.0.0",
     "@noble/hashes": "^2.0.1",
     "@noble/secp256k1": "^3.0.0",
