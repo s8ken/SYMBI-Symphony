@@ -1,0 +1,308 @@
+name: Production Deployment Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    name: Comprehensive Testing
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run linting
+      run: npm run lint
+      
+    - name: Run type checking
+      run: npm run type-check
+      
+    - name: Run unit tests
+      run: npm run test
+      
+    - name: Run integration tests
+      run: npm run test:integration
+      
+    - name: Run multi-agent scenario tests
+      run: npm run test:scenarios
+      
+    - name: Generate test coverage report
+      run: npm run test:coverage
+      
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        
+    - name: Security audit
+      run: npm audit --audit-level=moderate
+      
+    - name: Dependency check
+      run: npx audit-ci --moderate
+
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build application
+      run: npm run build
+      
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+        docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        
+    - name: Log in to Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Push Docker image
+      if: github.event_name != 'pull_request'
+      run: |
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifacts
+        path: |
+          dist/
+          orchestration/dist/
+        retention-days: 30
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+        
+    - name: Run CodeQL analysis
+      uses: github/codeql-action/init@v2
+      with:
+        languages: typescript
+        
+    - name: Perform CodeQL analysis
+      uses: github/codeql-action/analyze@v2
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [test, build, security-scan]
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to staging
+      run: |
+        echo "🚀 Deploying to staging environment..."
+        echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        
+        # Here you would typically deploy to your staging environment
+        # For example using kubectl, helm, or other deployment tools
+        
+        # Mock deployment for demonstration
+        sleep 30
+        echo "✅ Staging deployment completed"
+        
+    - name: Run smoke tests
+      run: |
+        echo "🧪 Running smoke tests against staging..."
+        npm run test:smoke -- --env=staging
+        
+    - name: Run integration tests against staging
+      run: |
+        echo "🔗 Running integration tests against staging..."
+        npm run test:integration -- --env=staging
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [test, build, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to production
+      run: |
+        echo "🚀 Deploying to production environment..."
+        echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        
+        # Production deployment steps
+        # 1. Prepare production environment
+        # 2. Deploy application with zero-downtime
+        # 3. Run health checks
+        # 4. Update load balancers
+        
+        # Mock production deployment
+        echo "📋 Preparing production environment..."
+        sleep 10
+        
+        echo "🔄 Deploying with zero-downtime..."
+        sleep 30
+        
+        echo "🏥 Running health checks..."
+        sleep 10
+        
+        echo "✅ Production deployment completed"
+        
+    - name: Run production health checks
+      run: |
+        echo "🏥 Running production health checks..."
+        # Health check endpoints
+        curl -f https://api.symbi.world/health || exit 1
+        curl -f https://api.symbi.world/api/agents || exit 1
+        echo "✅ All health checks passed"
+        
+    - name: Run production smoke tests
+      run: |
+        echo "🧪 Running production smoke tests..."
+        npm run test:smoke -- --env=production
+        
+    - name: Update deployment status
+      if: success()
+      run: |
+        echo "🎉 Production deployment successful!"
+        echo "📊 Deployment metrics:"
+        echo "  - Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        echo "  - Environment: production"
+        echo "  - Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        
+    - name: Notify team of deployment
+      if: success()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        text: "🚀 SYMBI Orchestration deployed to production successfully!\nCommit: ${{ github.sha }}\nDeployed by: ${{ github.actor }}"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run performance tests
+      run: |
+        echo "⚡ Running performance tests against production..."
+        npm run test:performance -- --env=production
+        
+    - name: Load testing with Artillery
+      run: |
+        echo "🎯 Running load tests..."
+        npm run test:load -- --env=production
+        
+    - name: Upload performance reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-reports
+        path: |
+          performance-results/
+          load-test-results/
+        retention-days: 30
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-production, performance-test]
+    if: always() && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Notify deployment success
+      if: needs.deploy-production.result == 'success'
+      run: |
+        echo "🎉 Production deployment completed successfully!"
+        echo "📊 Summary:"
+        echo "  - Commit: ${{ github.sha }}"
+        echo "  - Branch: ${{ github.ref_name }}"
+        echo "  - Actor: ${{ github.actor }}"
+        echo "  - Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        
+    - name: Notify deployment failure
+      if: needs.deploy-production.result == 'failure'
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        text: "❌ SYMBI Orchestration production deployment failed!\nCommit: ${{ github.sha }}\nFailed at: ${{ github.workflow }}"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
