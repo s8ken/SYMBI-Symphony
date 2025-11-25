@@ -43,7 +43,10 @@
     "pilot:enroll": "node dist/scripts/pilot/enroll.js",
     "pilot:issue": "node dist/scripts/pilot/issue.js",
     "pilot:verify": "node dist/scripts/pilot/verify.js",
-    "pilot:revoke": "node dist/scripts/pilot/revoke.js"
+    "pilot:revoke": "node dist/scripts/pilot/revoke.js",
+    "orchestration": "ts-node orchestration/server.ts",
+    "orchestration:dev": "nodemon orchestration/server.ts",
+    "orchestration:test": "jest --testPathPattern=orchestration"
   },
   "keywords": [
     "ai",
@@ -72,6 +75,9 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/express-rate-limit": "^7.1.8",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
     "@types/ws": "^8.18.1",
@@ -101,7 +107,12 @@
     "@noble/secp256k1": "^3.0.0",
     "axios": "^1.6.0",
     "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
     "fs-extra": "^11.0.0",
+    "helmet": "^7.1.0",
     "ioredis": "^5.3.2",
     "json-canonicalize": "^2.0.0",
     "jsonwebtoken": "^9.0.0",

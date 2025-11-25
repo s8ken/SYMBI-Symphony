@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    
+    "baseUrl": ".",
+    "paths": {
+      "@symbi/types": ["./shared/types/src"],
+      "@symbi/utils": ["./shared/utils/src"],
+      "@symbi/design-system": ["./shared/design-system/src"],
+      "@symbi/config": ["./shared/config"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "build", ".next"]
+}
