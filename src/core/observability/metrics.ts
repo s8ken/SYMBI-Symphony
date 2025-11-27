@@ -44,8 +44,8 @@ export class MetricsCollector {
     return this.gauges.get(name);
   }
 
-  getMetrics(): string {
-    return this.registry.metrics();
+  async getMetrics(): Promise<string> {
+    return await this.registry.metrics();
   }
 
   clear(): void {

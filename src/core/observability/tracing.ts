@@ -73,7 +73,7 @@ export class TracingManager {
     }
 
     // Add batch span processor
-    this.provider.addSpanProcessor(new BatchSpanProcessor(exporter));
+    this.provider.addSpanProcessor(new BatchSpanProcessor(exporter, {}));
 
     // Register the provider
     this.provider.register();
@@ -86,7 +86,7 @@ export class TracingManager {
       instrumentations: [
         new HttpInstrumentation({
           requestHook: (span, request) => {
-            span.setAttribute('http.request.headers', JSON.stringify(request.headers));
+            span.setAttribute('http.request.headers', JSON.stringify((request as any).headers));
           },
         }),
         new ExpressInstrumentation(),

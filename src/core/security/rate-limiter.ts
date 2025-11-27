@@ -3,7 +3,7 @@
  * Protects against abuse and ensures fair resource usage
  */
 
-import { getLogger } from '../observability/logger';
+import { Logger } from '../observability/logger';
 import { getAuditLogger, AuditEventType } from './audit';
 
 export interface RateLimitConfig {
@@ -191,7 +191,7 @@ export class RedisRateLimitStore implements RateLimitStore {
 export class RateLimiter {
   private store: RateLimitStore;
   private config: RateLimitConfig;
-  private logger = getLogger('RateLimiter');
+  private logger = new Logger('RateLimiter');
 
   constructor(store: RateLimitStore, config: RateLimitConfig) {
     this.store = store;

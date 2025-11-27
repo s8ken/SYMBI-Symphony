@@ -321,14 +321,14 @@ describe('SYMBI Orchestration Integration Tests', () => {
       
       // Create 10 concurrent agent coordination requests
       for (let i = 0; i < 10; i++) {
-        const request = request(baseUrl)
+        const requestPromise = request(baseUrl)
           .post('/api/agents/test-agent/coordinate')
           .send({
             id: `concurrent-test-${i}`,
             payload: { test: `data-${i}` },
             requiredCapabilities: []
           });
-        promises.push(request);
+        promises.push(requestPromise);
       }
 
       const responses = await Promise.all(promises);

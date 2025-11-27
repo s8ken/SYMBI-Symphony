@@ -8,6 +8,73 @@
 import { EventEmitter } from 'events';
 import { AgentRequest, AgentResponse, AgentCapabilities, AgentStatus } from '../shared/types/src';
 
+// HTTP client for making requests to agent endpoints
+interface HttpClientOptions {
+  timeout?: number;
+  retries?: number;
+  retryDelay?: number;
+}
+
+class HttpClient {
+  private defaultOptions: HttpClientOptions = {
+    timeout: 10000, // 10 seconds
+    retries: 3,
+    retryDelay: 1000 // 1 second
+  };
+
+  async request(url: string, options: RequestInit & HttpClientOptions = {}): Promise<any> {
+    const { timeout, retries, retryDelay, ...fetchOptions } = { ...this.defaultOptions, ...options };
+
+    let lastError: Error;
+
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+        const response = await fetch(url, {
+          ...fetchOptions,
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        lastError = error as Error;
+
+        if (attempt < retries && this.isRetryableError(error)) {
+          console.warn(`Request attempt ${attempt + 1} failed, retrying in ${retryDelay}ms:`, error.message);
+          await this.delay(retryDelay);
+          continue;
+        }
+
+        break;
+      }
+    }
+
+    throw new Error(`Request failed after ${retries + 1} attempts: ${lastError.message}`);
+  }
+
+  private isRetryableError(error: any): boolean {
+    // Retry on network errors, timeouts, and server errors (5xx)
+    return error.name === 'AbortError' ||
+           error.message.includes('fetch') ||
+           error.message.includes('network') ||
+           error.message.includes('ECONNREFUSED') ||
+           error.message.includes('ENOTFOUND') ||
+           (error.message.includes('HTTP') && error.message.includes('5'));
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
 export interface Agent {
   id: string;
   name: string;
@@ -158,36 +225,70 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   private async executeRequest(agent: Agent, request: AgentRequest): Promise<AgentResponse> {
+    const startTime = Date.now();
+
     try {
-      // This would integrate with the actual agent endpoint
-      // For now, we'll simulate a response
-      
+      // Make actual HTTP request to agent endpoint
+      const endpoint = agent.metadata.endpoint;
+      if (!endpoint) {
+        throw new Error(`Agent ${agent.id} has no endpoint configured`);
+      }
+
+      // Prepare request payload
+      const requestPayload = {
+        id: request.id,
+        type: agent.type,
+        capabilities: request.requiredCapabilities,
+        data: request.data,
+        metadata: request.metadata
+      };
+
+      // Make HTTP request to agent
+      const agentResponse = await this.httpClient.request(`${endpoint}/execute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'SYMBI-Orchestrator/1.0'
+        },
+        body: JSON.stringify(requestPayload),
+        timeout: 15000 // 15 seconds for agent requests
+      });
+
+      const executionTime = Date.now() - startTime;
+
       const response: AgentResponse = {
         success: true,
-        data: this.generateMockResponse(agent, request),
+        data: agentResponse,
         agentId: agent.id,
         timestamp: new Date().toISOString(),
-        executionTime: Math.random() * 1000, // Mock execution time
+        executionTime,
         metadata: {
           agentType: agent.type,
-          capabilities: agent.capabilities
+          capabilities: agent.capabilities,
+          endpoint: endpoint
         }
       };
 
       this.emit('task:completed', request.id, response);
-      
+
       return response;
     } catch (error) {
+      const executionTime = Date.now() - startTime;
+
       const errorResponse: AgentResponse = {
         success: false,
-        error: error.message,
+        error: `Agent request failed: ${error.message}`,
         agentId: agent.id,
         timestamp: new Date().toISOString(),
-        executionTime: 0
+        executionTime,
+        metadata: {
+          agentType: agent.type,
+          endpoint: agent.metadata.endpoint
+        }
       };
 
       this.emit('task:failed', request.id, errorResponse);
-      
+
       return errorResponse;
     }
   }
@@ -241,41 +342,6 @@ export class AgentOrchestrator extends EventEmitter {
     return `${prefix}-${timestamp}-${random}`;
   }
 
-  private generateMockResponse(agent: Agent, request: AgentRequest): any {
-    // Mock response generation based on agent type and request
-    switch (agent.type) {
-      case 'resonate':
-        return {
-          analysis: 'Content analyzed by Resonate',
-          sentiment: 0.8,
-          entities: ['entity1', 'entity2'],
-          confidence: 0.95
-        };
-      
-      case 'symphony':
-        return {
-          orchestration: 'Task orchestrated by Symphony',
-          trustReceipt: {
-            id: this.generateId(),
-            timestamp: new Date().toISOString(),
-            score: 0.92
-          }
-        };
-      
-      case 'vault':
-        return {
-          secret: 'Secret retrieved from Vault',
-          access: 'granted',
-          timestamp: new Date().toISOString()
-        };
-      
-      default:
-        return {
-          message: 'Request processed by external agent',
-          agentId: agent.id
-        };
-    }
-  }
 
   private generateId(): string {
     return Math.random().toString(36).substring(2, 15);
@@ -293,10 +359,10 @@ export class AgentOrchestrator extends EventEmitter {
 
     for (const [agentId, agent] of this.agents) {
       if (now.getTime() - agent.lastSeen.getTime() > timeoutMs) {
-        if (agent.status === 'active') {
-          agent.status = 'inactive';
+        if (agent.status !== 'failed') {
+          agent.status = 'failed';
           this.agents.set(agentId, agent);
-          console.log(`Agent marked inactive due to timeout: ${agentId}`);
+          console.log(`Agent marked failed due to timeout: ${agentId}`);
         }
       }
     }

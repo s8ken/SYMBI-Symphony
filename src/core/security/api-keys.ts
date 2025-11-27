@@ -4,7 +4,7 @@
  */
 
 import * as crypto from 'crypto';
-import { getLogger } from '../observability/logger';
+import { Logger } from '../observability/logger';
 import { getAuditLogger, AuditEventType } from './audit';
 
 export interface APIKey {
@@ -30,7 +30,7 @@ export interface APIKeyValidationResult {
 }
 
 export class APIKeyManager {
-  private logger = getLogger('APIKeyManager');
+  private logger = new Logger('APIKeyManager');
   private keyStore: Map<string, APIKey> = new Map(); // In-memory store (use database in production)
 
   /**
