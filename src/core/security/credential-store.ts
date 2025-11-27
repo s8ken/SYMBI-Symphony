@@ -62,6 +62,9 @@ export interface CredentialStoreConfig {
   defaultBackend: 'memory' | 'symbi-vault';
   auditEnabled: boolean;
   maxRetries: number;
+  cacheEnabled: boolean;
+  cacheTTL: number; // in seconds
+}
 /**
  * Encryption utilities for credential storage
  */
@@ -82,8 +85,8 @@ export class CredentialEncryption {
     // Derive key from master key and salt using HKDF-like approach
     const derivedKey = crypto.pbkdf2Sync(encryptionKey, salt, 10000, this.KEY_LENGTH, 'sha256');
 
-    // Create cipher
-    const cipher = crypto.createCipher(this.ALGORITHM, derivedKey);
+    // Create cipher - use createCipheriv for GCM mode
+    const cipher = crypto.createCipheriv(this.ALGORITHM, derivedKey, iv);
     cipher.setAAD(Buffer.from(salt)); // Additional authenticated data
 
     let encrypted = cipher.update(value, 'utf8', 'hex');
@@ -106,8 +109,8 @@ export class CredentialEncryption {
     // Derive the same key
     const derivedKey = crypto.pbkdf2Sync(encryptionKey, salt, 10000, this.KEY_LENGTH, 'sha256');
 
-    // Create decipher
-    const decipher = crypto.createDecipher(this.ALGORITHM, derivedKey);
+    // Create decipher - use createDecipheriv for GCM mode
+    const decipher = crypto.createDecipheriv(this.ALGORITHM, derivedKey, Buffer.from(iv, 'hex'));
     decipher.setAAD(Buffer.from(salt));
     decipher.setAuthTag(Buffer.from(tag, 'hex'));
 
@@ -130,9 +133,6 @@ export class CredentialEncryption {
   static validateKey(key: string): boolean {
     return /^[a-f0-9]{64}$/i.test(key) && key.length === 64;
   }
-}
-  cacheEnabled: boolean;
-  cacheTTL: number; // in seconds
 }
 /**
  * In-memory storage backend for development/testing

@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { AgentRequest, AgentResponse, AgentCapabilities, AgentStatus } from '../shared/types/src';
+import { AgentRequest, AgentResponse, Agent as SharedAgent, AgentCapabilities, AgentStatus } from '../shared/types/src';
 
 // HTTP client for making requests to agent endpoints
 interface HttpClientOptions {
@@ -75,12 +75,9 @@ class HttpClient {
   }
 }
 
-export interface Agent {
-  id: string;
-  name: string;
+export interface Agent extends Omit<SharedAgent, 'type' | 'trustLevel' | 'createdAt' | 'updatedAt'> {
   type: 'resonate' | 'symphony' | 'vault' | 'external';
   capabilities: AgentCapabilities;
-  status: AgentStatus;
   endpoint?: string;
   lastSeen: Date;
   trustScore: number;
@@ -91,9 +88,11 @@ export class AgentOrchestrator extends EventEmitter {
   private agents: Map<string, Agent> = new Map();
   private taskQueue: AgentRequest[] = [];
   private activeTasks: Map<string, AgentRequest> = new Map();
+  private httpClient: HttpClient;
 
   constructor() {
     super();
+    this.httpClient = new HttpClient();
     this.setupEventHandlers();
     this.startHealthCheck();
   }
@@ -116,13 +115,16 @@ export class AgentOrchestrator extends EventEmitter {
   /**
    * Register a new agent with the orchestrator
    */
-  public async registerAgent(agent: Omit<Agent, 'id' | 'lastSeen'>): Promise<string> {
+  public async registerAgent(agent: Omit<Agent, 'id' | 'lastSeen' | 'createdAt' | 'updatedAt'>): Promise<string> {
     const agentId = this.generateAgentId(agent);
+    const now = new Date().toISOString();
     const fullAgent: Agent = {
       ...agent,
       id: agentId,
       lastSeen: new Date(),
-      status: 'active'
+      status: 'active',
+      createdAt: now,
+      updatedAt: now
     };
 
     this.agents.set(agentId, fullAgent);
@@ -229,7 +231,7 @@ export class AgentOrchestrator extends EventEmitter {
 
     try {
       // Make actual HTTP request to agent endpoint
-      const endpoint = agent.metadata.endpoint;
+      const endpoint = agent.endpoint;
       if (!endpoint) {
         throw new Error(`Agent ${agent.id} has no endpoint configured`);
       }
@@ -283,7 +285,7 @@ export class AgentOrchestrator extends EventEmitter {
         executionTime,
         metadata: {
           agentType: agent.type,
-          endpoint: agent.metadata.endpoint
+          endpoint: agent.endpoint
         }
       };
 

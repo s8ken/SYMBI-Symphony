@@ -64,15 +64,15 @@ export class OrchestrationServer {
         name: 'Content Analysis Agent',
         type: 'resonate',
         capabilities: {
-          supported: ['text_analysis', 'sentiment_detection', 'entity_extraction'],
-          version: '1.0.0',
-          description: 'Analyzes text content for sentiment and entities'
+          supported: ['text_analysis', 'sentiment_detection', 'entity_extraction']
         },
-        status: 'active',
+        status: 'ready',
         trustScore: 0.95,
         metadata: {
           endpoint: 'http://localhost:3002',
-          specialization: 'content_analysis'
+          specialization: 'content_analysis',
+          version: '1.0.0',
+          description: 'Analyzes text content for sentiment and entities'
         }
       });
 

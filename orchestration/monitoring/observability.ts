@@ -8,6 +8,7 @@
 import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
+import client from 'prom-client';
 
 export interface Metric {
   name: string;
@@ -64,20 +65,69 @@ export class ObservabilitySystem extends EventEmitter {
 
   // Prometheus metrics
   private prometheusMetrics: {
-    cpuUsage: Gauge<string>;
-    memoryUsage: Gauge<string>;
-    diskUsage: Gauge<string>;
-    networkInbound: Counter<string>;
-    networkOutbound: Counter<string>;
-    systemUptime: Gauge<string>;
-    loadAverage: Gauge<string>;
-    processCount: Gauge<string>;
+    cpuUsage: client.Gauge<string>;
+    memoryUsage: client.Gauge<string>;
+    diskUsage: client.Gauge<string>;
+    networkInbound: client.Counter<string>;
+    networkOutbound: client.Counter<string>;
+    systemUptime: client.Gauge<string>;
+    loadAverage: client.Gauge<string>;
+    processCount: client.Gauge<string>;
   };
 
   constructor() {
     super();
     this.setupDefaultThresholds();
+    this.initializePrometheusMetrics();
     this.startMonitoring();
+  }
+
+  /**
+   * Initialize Prometheus metrics
+   */
+  private initializePrometheusMetrics(): void {
+    this.prometheusMetrics = {
+      cpuUsage: new client.Gauge({
+        name: 'symbi_system_cpu_usage',
+        help: 'CPU usage percentage',
+        labelNames: ['host']
+      }),
+      memoryUsage: new client.Gauge({
+        name: 'symbi_system_memory_usage',
+        help: 'Memory usage percentage',
+        labelNames: ['host']
+      }),
+      diskUsage: new client.Gauge({
+        name: 'symbi_system_disk_usage',
+        help: 'Disk usage percentage',
+        labelNames: ['host']
+      }),
+      networkInbound: new client.Counter({
+        name: 'symbi_system_network_inbound_bytes',
+        help: 'Network inbound traffic in bytes',
+        labelNames: ['host']
+      }),
+      networkOutbound: new client.Counter({
+        name: 'symbi_system_network_outbound_bytes',
+        help: 'Network outbound traffic in bytes',
+        labelNames: ['host']
+      }),
+      systemUptime: new client.Gauge({
+        name: 'symbi_system_uptime_seconds',
+        help: 'System uptime in seconds',
+        labelNames: ['host']
+      }),
+      loadAverage: new client.Gauge({
+        name: 'symbi_system_load_average',
+        help: 'System load average',
+        labelNames: ['host']
+      }),
+      processCount: new client.Gauge({
+        name: 'symbi_system_process_count',
+        help: 'Number of running processes',
+        labelNames: ['host']
+      })
+    };
   }
 
   /**

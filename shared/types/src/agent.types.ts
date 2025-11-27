@@ -7,6 +7,12 @@ export type AgentType = 'CONDUCTOR' | 'VARIANT' | 'EVALUATOR' | 'OVERSEER';
 
 export type AgentStatus = 'idle' | 'ready' | 'running' | 'completed' | 'failed' | 'paused';
 
+export interface AgentCapabilities {
+  supported: string[];
+  required?: string[];
+  optional?: string[];
+}
+
 export interface Agent {
   id: string;
   type: AgentType;

@@ -14,19 +14,25 @@ import rateLimit from 'express-rate-limit';
 import { AgentOrchestrator } from './orchestrator';
 import { MessageBroker } from './message-broker';
 import { TrustManager } from './trust-manager';
+import { ObservabilitySystem } from './monitoring/observability';
 import { ApiResponse, AgentRequest, TrustReceipt } from '../shared/types/src';
+import { APIKeyManager } from '../src/core/security/api-keys';
 
 export class ApiGateway {
   private app: express.Application;
   private orchestrator: AgentOrchestrator;
   private messageBroker: MessageBroker;
   private trustManager: TrustManager;
+  private apiKeyManager: APIKeyManager;
+  private observability: ObservabilitySystem;
 
   constructor() {
     this.app = express();
     this.orchestrator = new AgentOrchestrator();
     this.messageBroker = new MessageBroker();
     this.trustManager = new TrustManager();
+    this.apiKeyManager = new APIKeyManager();
+    this.observability = new ObservabilitySystem();
     
     this.setupMiddleware();
     this.setupRoutes();
@@ -60,6 +66,43 @@ export class ApiGateway {
     });
   }
 
+  private async authenticateApiKey(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const apiKey = req.headers['x-api-key'] as string;
+      
+      if (!apiKey) {
+        res.status(401).json({
+          success: false,
+          error: 'API key required',
+          message: 'Please provide a valid API key in the X-API-Key header'
+        });
+        return;
+      }
+
+      const validation = await this.apiKeyManager.validateKey(apiKey);
+      
+      if (!validation.valid) {
+        res.status(401).json({
+          success: false,
+          error: 'Invalid API key',
+          message: validation.error || 'The provided API key is invalid or expired'
+        });
+        return;
+      }
+
+      // Add user info to request for downstream use
+      (req as any).user = validation.key;
+      next();
+    } catch (error) {
+      console.error('Authentication error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Authentication failed',
+        message: 'Internal server error during authentication'
+      });
+    }
+  }
+
   private setupRoutes(): void {
     // Health check
     this.app.get('/health', (req: Request, res: Response) => {
@@ -74,30 +117,80 @@ export class ApiGateway {
       });
     });
 
+    // Metrics endpoint - Prometheus format
+    this.app.get('/metrics', async (req: Request, res: Response) => {
+      try {
+        const metrics = await this.observability.getPrometheusMetrics();
+        res.set('Content-Type', 'text/plain');
+        res.send(metrics);
+      } catch (error) {
+        console.error('Error generating metrics:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to generate metrics',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+
     // Agent orchestration endpoints
     this.app.post('/api/agents/:agentId/coordinate', 
+      this.authenticateApiKey.bind(this),
       this.coordinateAgent.bind(this)
     );
     
-    this.app.get('/api/agents', this.listAgents.bind(this));
-    this.app.get('/api/agents/:agentId/status', this.getAgentStatus.bind(this));
+    this.app.get('/api/agents', 
+      this.authenticateApiKey.bind(this),
+      this.listAgents.bind(this)
+    );
+    this.app.get('/api/agents/:agentId/status', 
+      this.authenticateApiKey.bind(this),
+      this.getAgentStatus.bind(this)
+    );
 
     // Trust protocol endpoints
-    this.app.post('/api/trust/receipts', this.generateTrustReceipt.bind(this));
-    this.app.get('/api/trust/receipts/:receiptId', this.getTrustReceipt.bind(this));
-    this.app.post('/api/trust/verify', this.verifyTrustReceipt.bind(this));
+    this.app.post('/api/trust/receipts', 
+      this.authenticateApiKey.bind(this),
+      this.generateTrustReceipt.bind(this)
+    );
+    this.app.get('/api/trust/receipts/:receiptId', 
+      this.authenticateApiKey.bind(this),
+      this.getTrustReceipt.bind(this)
+    );
+    this.app.post('/api/trust/verify', 
+      this.authenticateApiKey.bind(this),
+      this.verifyTrustReceipt.bind(this)
+    );
 
     // Message broker endpoints
-    this.app.post('/api/messages', this.sendMessage.bind(this));
-    this.app.get('/api/messages/queue/:queueId', this.getMessages.bind(this));
+    this.app.post('/api/messages', 
+      this.authenticateApiKey.bind(this),
+      this.sendMessage.bind(this)
+    );
+    this.app.get('/api/messages/queue/:queueId', 
+      this.authenticateApiKey.bind(this),
+      this.getMessages.bind(this)
+    );
 
     // Vault integration endpoints
-    this.app.get('/api/vault/credentials/:id', this.getCredentials.bind(this));
-    this.app.post('/api/vault/secrets', this.storeSecret.bind(this));
+    this.app.get('/api/vault/credentials/:id', 
+      this.authenticateApiKey.bind(this),
+      this.getCredentials.bind(this)
+    );
+    this.app.post('/api/vault/secrets', 
+      this.authenticateApiKey.bind(this),
+      this.storeSecret.bind(this)
+    );
 
     // Resonate integration endpoints
-    this.app.post('/api/resonate/analyze', this.analyzeContent.bind(this));
-    this.app.get('/api/resonate/agents/:id/capabilities', this.getAgentCapabilities.bind(this));
+    this.app.post('/api/resonate/analyze', 
+      this.authenticateApiKey.bind(this),
+      this.analyzeContent.bind(this)
+    );
+    this.app.get('/api/resonate/agents/:id/capabilities', 
+      this.authenticateApiKey.bind(this),
+      this.getAgentCapabilities.bind(this)
+    );
   }
 
   private async coordinateAgent(req: Request, res: Response): Promise<void> {
